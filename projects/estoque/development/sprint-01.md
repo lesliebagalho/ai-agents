@@ -1,5 +1,9 @@
 # Sprint 01
 
+## Status
+
+Concluida em nivel de implementacao inicial.
+
 ## Objetivo
 
 Preparar a base do sistema e entregar o fluxo inicial de autenticacao, estrutura multiempresa e cadastro de produtos.
@@ -28,3 +32,11 @@ Preparar a base do sistema e entregar o fluxo inicial de autenticacao, estrutura
 - Produtos e categorias respeitam isolamento por empresa.
 - Validacoes basicas de formulario e servidor implementadas.
 - Fluxo base pronto para a sprint de movimentacoes.
+
+## Resultado da Implementacao
+
+- Login por credenciais demo implementado.
+- Contexto multiempresa com troca de empresa ativa implementado.
+- Listagem e cadastro de categorias implementados.
+- Listagem, filtros e cadastro de produtos implementados.
+- Persistencia local de apoio criada para viabilizar validacao sem banco conectado nesta etapa.

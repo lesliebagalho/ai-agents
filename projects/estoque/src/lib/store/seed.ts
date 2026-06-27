@@ -1,0 +1,135 @@
+import type { DemoDatabase } from "@/types/domain";
+
+const now = new Date().toISOString();
+
+export const demoSeed: DemoDatabase = {
+  companies: [
+    { id: "company-acme", name: "Acme Varejo", slug: "acme-varejo", status: "ACTIVE" },
+    { id: "company-beta", name: "Beta Distribuidora", slug: "beta-distribuidora", status: "ACTIVE" },
+  ],
+  users: [
+    {
+      id: "user-ana",
+      name: "Ana Gestora",
+      email: "ana@estoque.local",
+      password: "123456",
+      status: "ACTIVE",
+    },
+    {
+      id: "user-bruno",
+      name: "Bruno Operador",
+      email: "bruno@estoque.local",
+      password: "123456",
+      status: "ACTIVE",
+    },
+  ],
+  userCompanies: [
+    {
+      id: "uc-1",
+      userId: "user-ana",
+      companyId: "company-acme",
+      role: "ADMIN",
+      isActive: true,
+    },
+    {
+      id: "uc-2",
+      userId: "user-ana",
+      companyId: "company-beta",
+      role: "MANAGER",
+      isActive: true,
+    },
+    {
+      id: "uc-3",
+      userId: "user-bruno",
+      companyId: "company-beta",
+      role: "OPERATOR",
+      isActive: true,
+    },
+  ],
+  categories: [
+    {
+      id: "category-acme-1",
+      companyId: "company-acme",
+      name: "Insumos",
+      description: "Materiais de consumo recorrente.",
+      createdAt: now,
+      updatedAt: now,
+    },
+    {
+      id: "category-beta-1",
+      companyId: "company-beta",
+      name: "Revenda",
+      description: "Produtos preparados para revenda.",
+      createdAt: now,
+      updatedAt: now,
+    },
+  ],
+  products: [
+    {
+      id: "product-acme-1",
+      companyId: "company-acme",
+      categoryId: "category-acme-1",
+      name: "Papel A4",
+      sku: "PAP-A4-001",
+      unit: "BOX",
+      minimumStock: 5,
+      status: "ACTIVE",
+      createdAt: now,
+      updatedAt: now,
+    },
+    {
+      id: "product-beta-1",
+      companyId: "company-beta",
+      categoryId: "category-beta-1",
+      name: "Caixa Organizadora",
+      sku: "CX-ORG-001",
+      unit: "UNIT",
+      minimumStock: 10,
+      status: "ACTIVE",
+      createdAt: now,
+      updatedAt: now,
+    },
+  ],
+  inventoryBalances: [
+    {
+      id: "balance-acme-1",
+      companyId: "company-acme",
+      productId: "product-acme-1",
+      currentQuantity: 12,
+      updatedAt: now,
+    },
+    {
+      id: "balance-beta-1",
+      companyId: "company-beta",
+      productId: "product-beta-1",
+      currentQuantity: 24,
+      updatedAt: now,
+    },
+  ],
+  inventoryMovements: [
+    {
+      id: "move-acme-1",
+      companyId: "company-acme",
+      productId: "product-acme-1",
+      performedByUserId: "user-ana",
+      type: "ENTRY",
+      quantity: 12,
+      previousQuantity: 0,
+      resultingQuantity: 12,
+      note: "Carga inicial para validacao.",
+      createdAt: now,
+    },
+    {
+      id: "move-beta-1",
+      companyId: "company-beta",
+      productId: "product-beta-1",
+      performedByUserId: "user-ana",
+      type: "ENTRY",
+      quantity: 24,
+      previousQuantity: 0,
+      resultingQuantity: 24,
+      note: "Carga inicial para validacao.",
+      createdAt: now,
+    },
+  ],
+};

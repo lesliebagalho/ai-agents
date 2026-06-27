@@ -3,3 +3,5 @@
 1- Orchestrator, inicie o projeto Estoque (ou o projeto que for inciiar)
 2- Orchestrator, bootstrap o projeto Estoque.
 3- Orchestrator, implemente a Sprint 01.
+4- Orchestrator, implemente a Sprint 02.
+5- Orchestrator, implemente a Sprint 03.

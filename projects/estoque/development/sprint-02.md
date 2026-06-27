@@ -1,5 +1,9 @@
 # Sprint 02
 
+## Status
+
+Concluida em nivel de implementacao inicial.
+
 ## Objetivo
 
 Entregar o nucleo operacional do estoque: entradas, saidas, ajustes e consulta de saldo.
@@ -27,3 +31,11 @@ Entregar o nucleo operacional do estoque: entradas, saidas, ajustes e consulta d
 - Saida reduz saldo corretamente.
 - Ajuste registra motivo e saldo resultante.
 - Empresa visualiza apenas seus proprios dados.
+
+## Resultado da Implementacao
+
+- Registro de entradas, saidas e ajustes implementado.
+- Saldo consolidado por produto implementado.
+- Historico de movimentacoes com filtros por produto e tipo implementado.
+- Consulta de saldo refletida em dashboard, produtos e movimentacoes.
+- Regra de saida sem saldo suficiente bloqueia a operacao.

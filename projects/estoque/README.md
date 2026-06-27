@@ -2,7 +2,7 @@
 
 ## Status
 
-DEVELOPMENT.
+TESTING.
 
 ## Objetivo
 
@@ -10,10 +10,10 @@ Projeto iniciado no AIEF para criação de um sistema de estoque voltado a peque
 
 ## Estado Atual
 
-As etapas de CEO Interview, Discovery, Architecture, Database Design e UI/UX Design foram concluidas.
+As etapas de CEO Interview, Discovery, Architecture, Database Design, UI/UX Design, Bootstrap e Development foram concluidas.
 
-O projeto esta pronto para iniciar a implementacao fullstack do MVP.
+O MVP funcional esta pronto para validacao de QA, com autenticacao demo, contexto multiempresa, catalogo, movimentacoes, dashboard e gestao basica de usuarios.
 
 ## Próximo Agente
 
-Senior Full Stack Engineer.
+QA Engineer.
