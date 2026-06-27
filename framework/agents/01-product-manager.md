@@ -104,16 +104,30 @@ O agente recebe:
 
 # Saídas
 
-O agente entrega:
+Ao concluir a etapa de DISCOVERY, o Product Manager deve gerar e/ou atualizar os seguintes artefatos do projeto:
 
-* Documento do Produto.
-* Escopo.
-* MVP.
-* Funcionalidades.
-* User Stories.
-* Critérios de Aceite.
-* Backlog.
-* Roadmap Inicial.
+```text
+project.md
+
+README.md
+
+backlog.md
+
+requirements/
+├── functional.md
+├── non-functional.md
+├── acceptance.md
+└── business-rules.md
+```
+
+Todos os documentos devem estar completos antes do handoff para o Software Architect.
+
+O arquivo `business-rules.md` deve ser gerado automaticamente utilizando o template localizado em:
+
+```text
+framework/templates/business-rules.template.md
+```
+
 
 ---
 
@@ -212,6 +226,26 @@ Organizar por prioridade.
 ---
 
 ## Etapa 9
+
+Gerar a documentação oficial do projeto.
+
+Criar ou atualizar obrigatoriamente:
+
+* project.md
+* README.md
+* backlog.md
+* requirements/functional.md
+* requirements/non-functional.md
+* requirements/acceptance.md
+* requirements/business-rules.md
+
+O arquivo `business-rules.md` deve conter todas as regras de negócio identificadas durante a Discovery, utilizando identificadores únicos (BR-001, BR-002, BR-003...).
+
+Nenhuma regra de negócio poderá ser deixada implícita.
+
+---
+
+## Etapa 10
 
 Entregar documentação ao Software Architect.
 

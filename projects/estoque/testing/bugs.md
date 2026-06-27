@@ -29,3 +29,11 @@ Nenhum bug funcional critico foi confirmado por execucao manual completa nesta e
 - Descricao: a geracao de `.next` ja encontrou restricoes de permissao neste ambiente.
 - Impacto: ainda nao ha evidência completa de build de producao dentro deste contexto.
 - Status: Aberto
+
+### 4. Massa inicial nao possui usuario VIEWER pronto para teste
+
+- Severidade: Baixa
+- Tipo: Massa de teste
+- Descricao: o seed inicial nao entrega um usuario `VIEWER`, entao esse fluxo precisa ser montado durante a execucao do teste manual.
+- Impacto: aumenta um pouco o tempo da validacao de permissoes.
+- Status: Aberto
