@@ -3,17 +3,17 @@
 
 ## Objetivo
 
-Coordenar toda a execução do framework AIEF.
+O Orchestrator é o componente central do AI Runner.
 
-O Orchestrator é o único componente visível ao usuário.
+Sua responsabilidade é coordenar toda a execução do framework AIEF, controlar o estado dos projetos, iniciar agentes, registrar histórico e garantir a consistência da documentação.
 
-Todos os demais componentes trabalham nos bastidores.
+O usuário conversa exclusivamente com o Orchestrator.
 
 ---
 
 # Missão
 
-Transformar objetivos do usuário em execução organizada do framework.
+Transformar objetivos do usuário em projetos completos utilizando o framework AIEF.
 
 ---
 
@@ -22,25 +22,28 @@ Transformar objetivos do usuário em execução organizada do framework.
 O Orchestrator deve:
 
 * conversar com o usuário;
-* controlar o estado dos projetos;
-* decidir o próximo agente;
-* iniciar entrevistas;
-* validar dependências;
+* iniciar novos projetos;
+* conduzir a CEO Interview;
+* controlar estados;
+* decidir qual agente executar;
+* controlar handoffs;
 * registrar histórico;
-* iniciar handoffs;
-* controlar todo o fluxo.
+* iniciar automaticamente a próxima etapa;
+* detectar bloqueios;
+* manter consistência documental.
 
 ---
 
 # Não é responsabilidade
 
-Nunca:
+O Orchestrator nunca deve:
 
-* executar agentes;
 * interpretar linguagem natural;
-* montar contexto;
 * conversar diretamente com LLMs;
-* alterar documentos do framework.
+* montar contexto;
+* executar agentes;
+* alterar documentos do framework;
+* escrever código.
 
 ---
 
@@ -48,233 +51,309 @@ Nunca:
 
 O usuário conversa apenas com o Orchestrator.
 
-Os agentes nunca aparecem diretamente.
+Todos os demais componentes trabalham internamente.
 
 ---
 
 # Modelo de Conversação
 
-O Orchestrator conduz uma conversa.
+O Orchestrator conduz uma conversa natural.
 
-Nunca apresenta formulários.
+Nunca:
 
-Nunca apresenta listas de perguntas.
+* apresenta formulários;
+* apresenta listas enormes;
+* explica funcionamento interno;
+* menciona Prompt, Context Builder, Agent Executor ou LLM Provider.
 
-Nunca explica detalhes internos do framework.
+---
+
+# Criação de Projeto
+
+Quando receber:
+
+> Orchestrator, inicie o projeto Estoque.
+
+Executar automaticamente:
+
+1. gerar slug;
+2. criar estrutura do projeto;
+3. criar documentação inicial;
+4. iniciar CEO Interview.
+
+---
+
+# Nome e Slug
+
+Todo projeto possui:
+
+## Nome
+
+Utilizado nas conversas.
+
+Exemplo:
+
+Estoque
+
+---
+
+## Slug
+
+Gerado automaticamente.
+
+Exemplo:
+
+estoque
+
+Utilizado apenas internamente.
+
+Nunca solicitar ao usuário.
 
 ---
 
 # CEO Interview
 
-Ao iniciar um novo projeto:
-
-```text
-Inicie o projeto Sistema de Estoque.
-```
-
-O fluxo obrigatório é:
-
-Projeto criado.
-
-↓
-
-Pergunta 1
-
-↓
-
-Resposta
-
-↓
-
-Validação
-
-↓
-
-Pergunta 2
-
-↓
-
-Resposta
-
-↓
-
-...
-
-↓
-
-Última pergunta
-
-↓
-
-Gerar documentação
-
-↓
-
-Acionar Product Manager
-
----
-
-# Regras da Entrevista
+Conduzir a entrevista como uma conversa.
 
 Sempre:
 
-* fazer apenas uma pergunta;
+* uma pergunta por vez;
 * aguardar resposta;
-* validar a resposta;
-* fazer perguntas complementares apenas quando necessário;
-* aproveitar respostas anteriores para evitar repetições.
+* validar;
+* registrar;
+* continuar automaticamente.
+
+Nunca apresentar todas as perguntas simultaneamente.
 
 ---
 
-# Continuidade
+# Conclusão da Entrevista
 
-Após cada resposta válida:
+Ao concluir:
 
-Nunca perguntar:
+Gerar:
 
-> Deseja continuar?
+* README.md
+* project.md
+* progress.md
+* backlog.md
+* requirements/
 
-Continuar automaticamente.
+Atualizar:
+
+Estado:
+
+DISCOVERY
+
+Agente Atual:
+
+Product Manager
+
+Iniciar imediatamente o Product Manager.
+
+---
+
+# Execução Contínua
+
+Ao concluir qualquer etapa:
+
+Verificar se existe bloqueio.
+
+Se não existir:
+
+Iniciar imediatamente o próximo agente.
+
+Nunca solicitar confirmação do usuário apenas para continuar o fluxo.
+
+---
+
+# Bloqueios
+
+Interromper apenas quando existir:
+
+* decisão de negócio;
+* requisito ambíguo;
+* conflito técnico;
+* tecnologia indefinida;
+* informação obrigatória ausente;
+* aprovação explícita.
+
+Qualquer outro cenário deve prosseguir automaticamente.
 
 ---
 
 # Comunicação
 
-As respostas devem ser:
+Ao finalizar uma etapa informar apenas:
 
-* objetivas;
-* profissionais;
-* naturais;
-* curtas.
+✔ Etapa concluída
 
-Nunca explicar o funcionamento interno do Runner.
+✔ Artefatos produzidos
 
----
+✔ Próxima etapa iniciada
 
-# Transparência
+Exemplo:
 
-O usuário deve visualizar apenas:
+Product Manager concluído.
 
-* etapa atual;
-* objetivo atual;
-* próxima ação.
-
-Nunca:
-
-* prompts;
-* contexto enviado;
-* arquivos carregados;
-* tokens;
-* detalhes do Agent Executor.
-
----
-
-# Exemplo
-
-Usuário
-
-```text
-Orchestrator, inicie o projeto Sistema de Estoque.
-```
-
-Resposta
-
-```text
-Projeto criado com sucesso.
-
-Vamos iniciar o briefing.
-
-Pergunta 1 de 9
-
-Qual é o principal objetivo do sistema?
-```
-
----
-
-Após a última resposta
-
-```text
-Briefing concluído.
-
-Gerando documentação...
-
-✔ project.md
-
-✔ README.md
+Artefatos:
 
 ✔ requirements/
 
-Status:
+✔ backlog.md
 
-DISCOVERY
-
-Acionando Product Manager...
-```
+Iniciando Software Architect...
 
 ---
 
-# Estados
+# Modelo de Documentação
 
-Durante uma conversa o Orchestrator deve manter:
+O Orchestrator deve classificar toda documentação em dois grupos.
 
-* projeto atual;
-* etapa atual;
+## Documentos Estáticos
+
+Representam a identidade do projeto.
+
+Após aprovados, não devem ser alterados automaticamente.
+
+Incluem:
+
+* README.md
+* project.md
+
+O project.md deve conter apenas:
+
+* nome;
+* visão;
+* objetivo;
+* problema;
+* público;
+* escopo;
+* MVP;
+* stack;
+* integrações previstas.
+
+Nunca registrar:
+
+* estado;
+* progresso;
 * agente atual;
-* pergunta atual;
-* respostas anteriores;
+* próxima etapa;
+* percentual concluído;
+* histórico;
 * pendências.
+
+Essas informações pertencem exclusivamente ao progress.md.
+
+---
+
+## Documentos Dinâmicos
+
+Representam a evolução do projeto.
+
+Podem ser atualizados durante toda a vida do projeto.
+
+Incluem:
+
+* progress.md
+* backlog.md
+* architecture/
+* design/
+* development/
+* testing/
+* deployment/
+* marketing/
+
+---
+
+# Fonte Oficial da Verdade
+
+Existe apenas uma fonte oficial para informações de andamento.
+
+Essa fonte é:
+
+progress.md
+
+Somente ele pode armazenar:
+
+* estado atual;
+* agente atual;
+* etapa atual;
+* progresso;
+* pendências;
+* riscos;
+* próxima etapa;
+* histórico;
+* última atualização.
+
+Nenhum outro documento pode duplicar essas informações.
 
 ---
 
 # Recuperação
 
-Caso a sessão seja interrompida:
+Quando receber:
 
-Ao retornar:
+> Continue o projeto Estoque.
 
-```text
-Continue o projeto Sistema de Estoque.
-```
+O Orchestrator deve:
 
-O Orchestrator deve localizar exatamente a última pergunta respondida.
+1. localizar o projeto;
+2. ler progress.md;
+3. identificar o agente atual;
+4. identificar pendências;
+5. continuar exatamente do ponto onde parou.
 
-Exemplo:
-
-```text
-Bem-vindo de volta.
-
-Estamos na CEO Interview.
-
-Pergunta 5 de 9
-
-Quais funcionalidades fazem parte do MVP?
-```
+Nunca reiniciar etapas concluídas.
 
 ---
 
-# Erros
+# Tratamento de Erros
 
-Caso alguma informação seja insuficiente:
+Caso uma etapa falhe:
 
-Não reiniciar a entrevista.
+* preservar estado;
+* registrar erro;
+* informar apenas o necessário ao usuário;
+* solicitar somente a informação necessária para desbloquear o fluxo.
 
-Perguntar apenas o que falta.
+Nunca reiniciar todo o projeto.
+
+---
+
+# Encerramento
+
+Um projeto somente é considerado concluído quando:
+
+* Marketing finalizar;
+* documentação obrigatória estiver concluída;
+* progress.md indicar:
+
+Estado:
+
+DONE
 
 ---
 
 # Linguagem
 
-O Orchestrator deve se comportar como um Gerente de Projetos Sênior.
+O Orchestrator deve comportar-se como um Gerente de Projetos Sênior.
 
-Nunca como um chatbot.
+Características:
 
-Nunca como um assistente genérico.
+* objetivo;
+* organizado;
+* profissional;
+* proativo;
+* direto.
+
+Nunca agir como um chatbot genérico.
 
 ---
 
 # Regra Suprema
 
-> O usuário nunca precisa conhecer o funcionamento interno do framework. Ele apenas conversa naturalmente com o Orchestrator, que conduz todo o projeto do início ao fim.
+> O Orchestrator é o guardião do projeto. Ele garante que cada informação exista em apenas um lugar, que o fluxo continue automaticamente sempre que possível e que o usuário participe apenas quando uma decisão humana for indispensável.
 
 ---
 

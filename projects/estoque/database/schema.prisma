@@ -1,0 +1,157 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum CompanyStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum UserStatus {
+  ACTIVE
+  INVITED
+  INACTIVE
+}
+
+enum UserRole {
+  ADMIN
+  MANAGER
+  OPERATOR
+  VIEWER
+}
+
+enum ProductStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum MovementType {
+  ENTRY
+  EXIT
+  ADJUSTMENT
+}
+
+enum UnitType {
+  UNIT
+  BOX
+  KG
+  LITER
+  METER
+}
+
+model Company {
+  id                String             @id @default(uuid())
+  name              String
+  slug              String             @unique
+  status            CompanyStatus      @default(ACTIVE)
+  categories        Category[]
+  products          Product[]
+  inventoryMoves    InventoryMovement[]
+  inventoryBalances InventoryBalance[]
+  userCompanies     UserCompany[]
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  deletedAt         DateTime?
+}
+
+model User {
+  id                String              @id @default(uuid())
+  name              String
+  email             String              @unique
+  passwordHash      String?
+  status            UserStatus          @default(ACTIVE)
+  userCompanies     UserCompany[]
+  inventoryMoves    InventoryMovement[]
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  deletedAt         DateTime?
+}
+
+model UserCompany {
+  id         String   @id @default(uuid())
+  userId     String
+  companyId  String
+  role       UserRole
+  isActive   Boolean  @default(true)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Restrict)
+  company    Company  @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([userId, companyId])
+  @@index([companyId])
+}
+
+model Category {
+  id          String    @id @default(uuid())
+  companyId   String
+  name        String
+  description String?
+  company     Company   @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  products    Product[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  @@unique([companyId, name])
+  @@index([companyId])
+}
+
+model Product {
+  id               String              @id @default(uuid())
+  companyId        String
+  categoryId       String?
+  name             String
+  sku              String?
+  unit             UnitType
+  minimumStock     Decimal?            @db.Decimal(18, 4)
+  status           ProductStatus       @default(ACTIVE)
+  company          Company             @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  category         Category?           @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  inventoryMoves   InventoryMovement[]
+  inventoryBalance InventoryBalance?
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+  deletedAt        DateTime?
+
+  @@unique([companyId, sku])
+  @@index([companyId, name])
+  @@index([companyId, status])
+}
+
+model InventoryMovement {
+  id                String       @id @default(uuid())
+  companyId         String
+  productId         String
+  performedByUserId String
+  type              MovementType
+  quantity          Decimal      @db.Decimal(18, 4)
+  reason            String?
+  note              String?
+  referenceCode     String?
+  company           Company      @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  product           Product      @relation(fields: [productId], references: [id], onDelete: Restrict)
+  performedByUser   User         @relation(fields: [performedByUserId], references: [id], onDelete: Restrict)
+  createdAt         DateTime     @default(now())
+
+  @@index([companyId, productId, createdAt])
+  @@index([companyId, type, createdAt])
+  @@index([companyId, performedByUserId, createdAt])
+}
+
+model InventoryBalance {
+  id              String    @id @default(uuid())
+  companyId       String
+  productId       String    @unique
+  currentQuantity Decimal   @default(0) @db.Decimal(18, 4)
+  company         Company   @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  product         Product   @relation(fields: [productId], references: [id], onDelete: Restrict)
+  updatedAt       DateTime  @updatedAt
+
+  @@index([companyId, productId])
+}
