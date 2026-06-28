@@ -294,11 +294,20 @@ export async function getProductById(companyId: string, productId?: string | nul
 type ProductInput = {
   id?: string;
   name: string;
+  description?: string;
+  code?: string;
   sku?: string;
+  barcode?: string;
+  brand?: string;
   categoryId?: string;
   costPrice?: number;
   unit: Product["unit"];
   minimumStock?: number;
+  maximumStock?: number;
+  location?: string;
+  weight?: number;
+  dimensions?: string;
+  imageUrl?: string;
   status: Product["status"];
 };
 
@@ -335,11 +344,20 @@ export async function upsertProduct(companyId: string, input: ProductInput) {
         ? {
             ...product,
             name: input.name.trim(),
+            description: input.description?.trim() || undefined,
+            code: input.code?.trim() || undefined,
             sku,
+            barcode: input.barcode?.trim() || undefined,
+            brand: input.brand?.trim() || undefined,
             categoryId: input.categoryId || undefined,
             costPrice: input.costPrice,
             unit: input.unit,
             minimumStock: input.minimumStock,
+            maximumStock: input.maximumStock,
+            location: input.location?.trim() || undefined,
+            weight: input.weight,
+            dimensions: input.dimensions?.trim() || undefined,
+            imageUrl: input.imageUrl?.trim() || undefined,
             status: input.status,
             updatedAt: new Date().toISOString(),
           }
@@ -352,11 +370,20 @@ export async function upsertProduct(companyId: string, input: ProductInput) {
       id: productId,
       companyId,
       name: input.name.trim(),
+      description: input.description?.trim() || undefined,
+      code: input.code?.trim() || undefined,
       sku,
+      barcode: input.barcode?.trim() || undefined,
+      brand: input.brand?.trim() || undefined,
       categoryId: input.categoryId || undefined,
       costPrice: input.costPrice,
       unit: input.unit,
       minimumStock: input.minimumStock,
+      maximumStock: input.maximumStock,
+      location: input.location?.trim() || undefined,
+      weight: input.weight,
+      dimensions: input.dimensions?.trim() || undefined,
+      imageUrl: input.imageUrl?.trim() || undefined,
       status: input.status,
       createdAt: now,
       updatedAt: now,

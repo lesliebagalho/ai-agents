@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { canManageCatalog, canRegisterMovements, requireSessionContext } from "@/lib/auth/auth";
-import { registerInventoryMovement, upsertCategory, upsertProduct } from "@/lib/store/database";
+import { listProductsByCompany, registerInventoryMovement, upsertCategory, upsertProduct } from "@/lib/store/database";
 import { categorySchema, inventoryMovementSchema, productSchema } from "@/lib/validation";
 
 export async function saveCategoryAction(formData: FormData) {
@@ -48,16 +48,27 @@ export async function saveProductAction(formData: FormData) {
   const parsed = productSchema.safeParse({
     id: formData.get("id"),
     name: formData.get("name"),
+    description: formData.get("description"),
+    code: formData.get("code"),
     sku: formData.get("sku"),
+    barcode: formData.get("barcode"),
+    brand: formData.get("brand"),
     categoryId: formData.get("categoryId"),
     costPrice: formData.get("costPrice"),
     unit: formData.get("unit"),
     minimumStock: formData.get("minimumStock"),
+    maximumStock: formData.get("maximumStock"),
+    location: formData.get("location"),
+    weight: formData.get("weight"),
+    dimensions: formData.get("dimensions"),
+    imageUrl: formData.get("imageUrl"),
     status: formData.get("status"),
   });
 
   if (!parsed.success) {
-    redirect(`/products/new?error=Preencha%20todos%20os%20campos%20obrigatorios%20do%20produto.`);
+    const productId = formData.get("id");
+    const basePath = productId ? `/products/${productId}` : "/products/new";
+    redirect(`${basePath}?error=Preencha%20todos%20os%20campos%20obrigatorios%20do%20produto.`);
   }
 
   try {
@@ -103,5 +114,131 @@ export async function saveInventoryMovementAction(formData: FormData) {
   revalidatePath("/products");
   revalidatePath("/dashboard");
   redirect("/inventory?success=Movimentacao%20registrada%20com%20sucesso.");
+}
+
+export async function exportProductsCsvAction() {
+  const session = await requireSessionContext();
+
+  if (!canManageCatalog(session.activeRole)) {
+    return { error: "Sem permissao para exportar produtos." };
+  }
+
+  const products = await listProductsByCompany(session.activeCompany.id);
+
+  const headers = [
+    "Codigo",
+    "SKU",
+    "Codigo de Barras",
+    "Nome",
+    "Descricao",
+    "Categoria",
+    "Marca",
+    "Unidade",
+    "Preco de Custo",
+    "Estoque Minimo",
+    "Estoque Maximo",
+    "Localizacao",
+    "Peso",
+    "Dimensoes",
+    "Status",
+  ];
+
+  const rows = products.map((product) => [
+    product.code || "",
+    product.sku || "",
+    product.barcode || "",
+    product.name,
+    product.description || "",
+    product.categoryId || "",
+    product.brand || "",
+    product.unit,
+    product.costPrice != null ? String(product.costPrice) : "",
+    product.minimumStock != null ? String(product.minimumStock) : "",
+    product.maximumStock != null ? String(product.maximumStock) : "",
+    product.location || "",
+    product.weight != null ? String(product.weight) : "",
+    product.dimensions || "",
+    product.status,
+  ]);
+
+  const csvContent = [
+    headers.join(","),
+    ...rows.map((row) => row.map((cell) => `"${cell.replace(/"/g, '""')}"`).join(",")),
+  ].join("\n");
+
+  const bom = "\uFEFF";
+  return { csv: bom + csvContent, filename: `produtos-${session.activeCompany.slug}.csv` };
+}
+
+export async function importProductsFromCsvAction(formData: FormData) {
+  const session = await requireSessionContext();
+
+  if (!canManageCatalog(session.activeRole)) {
+    return { imported: 0, errors: ["Sem permissao para importar produtos."] };
+  }
+
+  const csv = String(formData.get("csv") ?? "").trim();
+  if (!csv) {
+    return { imported: 0, errors: ["Arquivo vazio."] };
+  }
+
+  const lines = csv.split("\n").map((line) => line.trim()).filter(Boolean);
+  if (lines.length < 2) {
+    return { imported: 0, errors: ["Arquivo sem dados alem do cabecalho."] };
+  }
+
+  // Remove BOM se presente
+  lines[0] = lines[0].replace(/^\uFEFF/, "");
+
+  const headers = lines[0].split(",").map((h) => h.replace(/^"|"$/g, "").trim());
+
+  const nameIdx = headers.findIndex((h) => h.toLowerCase().includes("nome"));
+  const unitIdx = headers.findIndex((h) => h.toLowerCase().includes("unidade"));
+  const skuIdx = headers.findIndex((h) => h.toLowerCase().includes("sku"));
+  const codeIdx = headers.findIndex((h) => h.toLowerCase().includes("codigo"));
+  const statusIdx = headers.findIndex((h) => h.toLowerCase().includes("status"));
+
+  if (nameIdx === -1) {
+    return { imported: 0, errors: ["Cabecalho 'Nome' nao encontrado no CSV."] };
+  }
+
+  let imported = 0;
+  const errors: string[] = [];
+
+  for (let i = 1; i < lines.length; i++) {
+    const cols = lines[i].split(",").map((c) => c.replace(/^"|"$/g, "").trim());
+
+    const name = cols[nameIdx]?.trim();
+    if (!name) {
+      errors.push(`Linha ${i + 1}: Nome vazio, ignorado.`);
+      continue;
+    }
+
+    const unit = (unitIdx !== -1 ? cols[unitIdx] : "UNIT") || "UNIT";
+    const validUnits = ["UNIT", "BOX", "KG", "LITER", "METER"];
+    const finalUnit = validUnits.includes(unit.toUpperCase()) ? unit.toUpperCase() : "UNIT";
+
+    const status = (statusIdx !== -1 ? cols[statusIdx] : "ACTIVE") || "ACTIVE";
+    const finalStatus = status.toUpperCase() === "INACTIVE" ? "INACTIVE" : "ACTIVE";
+
+    try {
+      await upsertProduct(session.activeCompany.id, {
+        name,
+        sku: skuIdx !== -1 ? cols[skuIdx] : undefined,
+        code: codeIdx !== -1 ? cols[codeIdx] : undefined,
+        unit: finalUnit as any,
+        status: finalStatus as any,
+      });
+      imported++;
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : "Erro desconhecido";
+      errors.push(`Linha ${i + 1} (${name}): ${msg}`);
+    }
+  }
+
+  revalidatePath("/products");
+  revalidatePath("/dashboard");
+
+  return { imported, errors };
 }
 

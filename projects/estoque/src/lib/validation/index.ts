@@ -26,7 +26,27 @@ export const productSchema = z.object({
     .nullish()
     .transform((value) => value || undefined),
   name: z.string().trim().min(2, "Informe o nome do produto."),
+  description: z
+    .string()
+    .trim()
+    .nullish()
+    .transform((value) => value || undefined),
+  code: z
+    .string()
+    .trim()
+    .nullish()
+    .transform((value) => value || undefined),
   sku: z
+    .string()
+    .trim()
+    .nullish()
+    .transform((value) => value || undefined),
+  barcode: z
+    .string()
+    .trim()
+    .nullish()
+    .transform((value) => value || undefined),
+  brand: z
     .string()
     .trim()
     .nullish()
@@ -59,6 +79,43 @@ export const productSchema = z.object({
       return Number.isFinite(numeric) ? numeric : NaN;
     })
     .refine((value) => value === undefined || value >= 0, "Estoque minimo invalido."),
+  maximumStock: z
+    .union([z.string(), z.number(), z.null(), z.undefined()])
+    .transform((value) => {
+      if (value === null || value === undefined || value === "") {
+        return undefined;
+      }
+
+      const numeric = typeof value === "number" ? value : Number(String(value).replace(",", "."));
+      return Number.isFinite(numeric) ? numeric : NaN;
+    })
+    .refine((value) => value === undefined || value >= 0, "Estoque maximo invalido."),
+  location: z
+    .string()
+    .trim()
+    .nullish()
+    .transform((value) => value || undefined),
+  weight: z
+    .union([z.string(), z.number(), z.null(), z.undefined()])
+    .transform((value) => {
+      if (value === null || value === undefined || value === "") {
+        return undefined;
+      }
+
+      const numeric = typeof value === "number" ? value : Number(String(value).replace(",", "."));
+      return Number.isFinite(numeric) ? numeric : NaN;
+    })
+    .refine((value) => value === undefined || value >= 0, "Peso invalido."),
+  dimensions: z
+    .string()
+    .trim()
+    .nullish()
+    .transform((value) => value || undefined),
+  imageUrl: z
+    .string()
+    .trim()
+    .nullish()
+    .transform((value) => value || undefined),
   status: z.enum(["ACTIVE", "INACTIVE"]),
 });
 

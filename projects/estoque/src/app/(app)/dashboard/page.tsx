@@ -7,6 +7,7 @@ import {
   listProductsWithBalance,
 } from "@/lib/store/database";
 import MovementChart from "./_components/MovementChart";
+import ProductThumb from "@/components/ProductThumb";
 
 function formatBRL(value: number) {
   return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -216,6 +217,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
               <table className="data-table">
                 <thead>
                   <tr>
+                    <th></th>
                     <th>Produto</th>
                     <th>Saldo</th>
                     <th>Minimo</th>
@@ -224,6 +226,9 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                 <tbody>
                   {lowStockProducts.slice(0, 6).map((product) => (
                     <tr key={product.id}>
+                      <td>
+                        <ProductThumb url={product.imageUrl} alt={product.name} />
+                      </td>
                       <td>
                         <Link href={`/products/${product.id}`} className="table-link">
                           {product.name}

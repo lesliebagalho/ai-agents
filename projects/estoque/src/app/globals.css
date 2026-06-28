@@ -774,3 +774,111 @@ textarea {
   color: var(--danger-text);
   font-weight: 700;
 }
+
+/* Campo somente leitura */
+.readonly-field {
+  padding: 11px 12px;
+  background: var(--surface-muted);
+  border-radius: 8px;
+  margin: 0;
+}
+
+/* Botoes de acao em linha */
+.action-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+/* Grid de etiquetas */
+.labels-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+}
+
+.label-card {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+  display: grid;
+  gap: 4px;
+  background: #fff;
+  font-size: 12px;
+}
+
+.label-header {
+  font-size: 10px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  letter-spacing: 0.5px;
+}
+
+.label-name {
+  font-weight: 700;
+  font-size: 13px;
+  line-height: 1.3;
+}
+
+.label-sku {
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.label-barcode {
+  font-family: monospace;
+  font-size: 14px;
+  letter-spacing: 1px;
+  color: var(--text);
+}
+
+.label-price {
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--primary);
+}
+
+.label-unit {
+  font-size: 10px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+/* Thumbnail de produto */
+.product-thumb {
+  width: 40px;
+  height: 40px;
+  border-radius: 6px;
+  object-fit: cover;
+  display: block;
+}
+
+.product-thumb--placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-muted);
+  color: var(--text-muted);
+}
+
+/* Preview de imagem no formulario */
+.image-preview {
+  width: 80px;
+  height: 80px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  margin-bottom: 8px;
+}
+
+.image-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.image-preview--broken {
+  display: none;
+}

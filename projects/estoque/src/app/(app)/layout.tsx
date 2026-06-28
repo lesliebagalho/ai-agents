@@ -19,6 +19,9 @@ export default async function AppLayout({ children }: AppLayoutProps) {
       children: [
         { href: "/products", label: "Listagem", visible: true },
         { href: "/products/new", label: "Novo", visible: canManageCatalog(session.activeRole) },
+        { href: "/products/import", label: "Importar", visible: canManageCatalog(session.activeRole) },
+        { href: "/products/export", label: "Exportar", visible: true },
+        { href: "/products/labels", label: "Etiquetas", visible: true },
       ],
     },
     {

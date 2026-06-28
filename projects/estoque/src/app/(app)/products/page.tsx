@@ -1,11 +1,10 @@
 import Link from "next/link";
 import { canManageCatalog, requireSessionContext } from "@/lib/auth/auth";
-import { saveProductAction } from "@/features/products/actions";
-import { getProductById, listCategoriesByCompany, listProductsWithBalance } from "@/lib/store/database";
+import { listCategoriesByCompany, listProductsWithBalance } from "@/lib/store/database";
+import ProductThumb from "@/components/ProductThumb";
 
 type ProductsPageProps = {
   searchParams?: Promise<{
-    edit?: string;
     error?: string;
     success?: string;
     q?: string;
@@ -23,10 +22,9 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
     status: params?.status,
   };
 
-  const [categories, products, editingProduct] = await Promise.all([
+  const [categories, products] = await Promise.all([
     listCategoriesByCompany(session.activeCompany.id),
     listProductsWithBalance(session.activeCompany.id, filters),
-    getProductById(session.activeCompany.id, params?.edit),
   ]);
   const canEdit = canManageCatalog(session.activeRole);
 
@@ -82,12 +80,23 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
       <section className="surface-card section-card">
         <div className="section-header">
           <h2>Produtos cadastrados</h2>
-          <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+          <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
             <span className="muted">{products.length} item(ns)</span>
+            <Link href="/products/labels" className="link-button" style={{ fontSize: 13 }}>
+              Etiquetas
+            </Link>
+            <Link href="/products/export" className="link-button" style={{ fontSize: 13 }}>
+              Exportar
+            </Link>
             {canEdit ? (
-              <Link href="/products/new" className="button primary" style={{ fontSize: 14 }}>
-                + Novo produto
-              </Link>
+              <>
+                <Link href="/products/import" className="link-button" style={{ fontSize: 13 }}>
+                  Importar
+                </Link>
+                <Link href="/products/new" className="button primary" style={{ fontSize: 14 }}>
+                  + Novo produto
+                </Link>
+              </>
             ) : null}
           </div>
         </div>
@@ -99,6 +108,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
             <table className="data-table">
               <thead>
                 <tr>
+                  <th></th>
                   <th>Produto</th>
                   <th>SKU</th>
                   <th>Categoria</th>
@@ -115,6 +125,9 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
 
                   return (
                     <tr key={product.id}>
+                      <td>
+                        <ProductThumb url={product.imageUrl} alt={product.name} />
+                      </td>
                       <td>{product.name}</td>
                       <td>{product.sku || "-"}</td>
                       <td>{category?.name || "-"}</td>
@@ -141,86 +154,6 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
           </div>
         )}
       </section>
-
-      {editingProduct && (
-        <section className="surface-card section-card">
-          <div className="section-header">
-            <h2>Editando: {editingProduct.name}</h2>
-            <Link href="/products" className="link-button">
-              Cancelar edicao
-            </Link>
-          </div>
-
-          {!canEdit ? (
-            <div className="message error">Seu perfil nao pode alterar produtos nesta empresa.</div>
-          ) : (
-            <form action={saveProductAction} className="field-grid">
-              <input type="hidden" name="id" value={editingProduct.id} />
-
-              <div className="field">
-                <label htmlFor="name">Nome</label>
-                <input id="name" name="name" defaultValue={editingProduct.name ?? ""} required />
-              </div>
-
-              <div className="field-row two">
-                <div className="field">
-                  <label htmlFor="sku">SKU</label>
-                  <input id="sku" name="sku" defaultValue={editingProduct.sku ?? ""} />
-                </div>
-
-                <div className="field">
-                  <label htmlFor="categoryId">Categoria</label>
-                  <select id="categoryId" name="categoryId" defaultValue={editingProduct.categoryId ?? ""}>
-                    <option value="">Sem categoria</option>
-                    {categories.map((category) => (
-                      <option key={category.id} value={category.id}>
-                        {category.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div className="field-row two">
-                <div className="field">
-                  <label htmlFor="unit">Unidade</label>
-                  <select id="unit" name="unit" defaultValue={editingProduct.unit ?? "UNIT"}>
-                    <option value="UNIT">UNIT</option>
-                    <option value="BOX">BOX</option>
-                    <option value="KG">KG</option>
-                    <option value="LITER">LITER</option>
-                    <option value="METER">METER</option>
-                  </select>
-                </div>
-
-                <div className="field">
-                  <label htmlFor="minimumStock">Estoque minimo</label>
-                  <input
-                    id="minimumStock"
-                    name="minimumStock"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    defaultValue={editingProduct.minimumStock ?? ""}
-                  />
-                </div>
-              </div>
-
-              <div className="field">
-                <label htmlFor="status">Status</label>
-                <select id="status" name="status" defaultValue={editingProduct.status ?? "ACTIVE"}>
-                  <option value="ACTIVE">ACTIVE</option>
-                  <option value="INACTIVE">INACTIVE</option>
-                </select>
-              </div>
-
-              <button type="submit" className="button primary">
-                Salvar alteracoes
-              </button>
-            </form>
-          )}
-        </section>
-      )}
     </div>
   );
 }
