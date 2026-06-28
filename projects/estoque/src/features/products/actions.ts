@@ -8,25 +8,29 @@ import { categorySchema, inventoryMovementSchema, productSchema } from "@/lib/va
 
 export async function saveCategoryAction(formData: FormData) {
   const session = await requireSessionContext();
+  const categoryId = formData.get("id");
+  const isEditing = categoryId && String(categoryId).trim().length > 0;
+  const basePath = isEditing ? `/categories/${categoryId}` : "/categories/new";
+
   if (!canManageCatalog(session.activeRole)) {
-    redirect("/categories?error=Seu%20perfil%20nao%20pode%20alterar%20categorias.");
+    redirect(`${basePath}?error=Seu%20perfil%20nao%20pode%20alterar%20categorias.`);
   }
 
   const parsed = categorySchema.safeParse({
-    id: formData.get("id"),
+    id: categoryId,
     name: formData.get("name"),
     description: formData.get("description"),
   });
 
   if (!parsed.success) {
-    redirect("/categories?error=Preencha%20os%20campos%20obrigatorios%20da%20categoria.");
+    redirect(`${basePath}?error=Preencha%20os%20campos%20obrigatorios%20da%20categoria.`);
   }
 
   try {
     await upsertCategory(session.activeCompany.id, parsed.data);
   } catch (error) {
     const message = error instanceof Error ? error.message : "Nao foi possivel salvar a categoria.";
-    redirect(`/categories?error=${encodeURIComponent(message)}`);
+    redirect(`${basePath}?error=${encodeURIComponent(message)}`);
   }
 
   revalidatePath("/categories");
