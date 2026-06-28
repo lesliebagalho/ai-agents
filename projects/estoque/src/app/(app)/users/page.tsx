@@ -1,11 +1,9 @@
 import Link from "next/link";
 import { canManageUsers, requireSessionContext } from "@/lib/auth/auth";
-import { saveUserAction } from "@/features/users/actions";
-import { getUserMembershipById, listUsersByCompany } from "@/lib/store/database";
+import { listUsersByCompany } from "@/lib/store/database";
 
 type UsersPageProps = {
   searchParams?: Promise<{
-    edit?: string;
     error?: string;
     success?: string;
   }>;
@@ -26,21 +24,23 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
     );
   }
 
-  const [users, editingUser] = await Promise.all([
-    listUsersByCompany(session.activeCompany.id),
-    getUserMembershipById(session.activeCompany.id, params?.edit),
-  ]);
+  const users = await listUsersByCompany(session.activeCompany.id);
 
   return (
-    <div className="content-grid two">
+    <div className="stack-lg">
+      {params?.error ? <div className="message error" style={{ marginBottom: 16 }}>{params.error}</div> : null}
+      {params?.success ? <div className="message success" style={{ marginBottom: 16 }}>{params.success}</div> : null}
+
       <section className="surface-card section-card">
         <div className="section-header">
           <h2>Usuarios da empresa</h2>
-          <span className="muted">{users.length} usuario(s)</span>
+          <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+            <span className="muted">{users.length} usuario(s)</span>
+            <Link href="/users/new" className="button primary" style={{ fontSize: 14 }}>
+              + Novo usuario
+            </Link>
+          </div>
         </div>
-
-        {params?.error ? <div className="message error" style={{ marginBottom: 16 }}>{params.error}</div> : null}
-        {params?.success ? <div className="message success" style={{ marginBottom: 16 }}>{params.success}</div> : null}
 
         <div className="table-wrap">
           <table className="data-table">
@@ -63,7 +63,7 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
                     <span className="status-badge">{user.status}</span>
                   </td>
                   <td>
-                    <Link href={`/users?edit=${user.id}`} className="link-button">
+                    <Link href={`/users/${user.id}`} className="link-button">
                       Editar
                     </Link>
                   </td>
@@ -72,61 +72,6 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
             </tbody>
           </table>
         </div>
-      </section>
-
-      <section className="surface-card section-card">
-        <div className="section-header">
-          <h2>{editingUser ? "Editar usuario" : "Novo usuario"}</h2>
-          {editingUser ? (
-            <Link href="/users" className="link-button">
-              Limpar edicao
-            </Link>
-          ) : null}
-        </div>
-
-        <form action={saveUserAction} className="field-grid">
-          <input type="hidden" name="id" value={editingUser?.id ?? ""} />
-
-          <div className="field">
-            <label htmlFor="name">Nome</label>
-            <input id="name" name="name" defaultValue={editingUser?.name ?? ""} required />
-          </div>
-
-          <div className="field">
-            <label htmlFor="email">Email</label>
-            <input id="email" name="email" type="email" defaultValue={editingUser?.email ?? ""} required />
-          </div>
-
-          <div className="field">
-            <label htmlFor="password">Senha {editingUser ? "(opcional)" : ""}</label>
-            <input id="password" name="password" type="password" placeholder={editingUser ? "Manter atual" : "123456"} />
-          </div>
-
-          <div className="field-row two">
-            <div className="field">
-              <label htmlFor="role">Perfil</label>
-              <select id="role" name="role" defaultValue={editingUser?.membership.role ?? "OPERATOR"}>
-                <option value="ADMIN">ADMIN</option>
-                <option value="MANAGER">MANAGER</option>
-                <option value="OPERATOR">OPERATOR</option>
-                <option value="VIEWER">VIEWER</option>
-              </select>
-            </div>
-
-            <div className="field">
-              <label htmlFor="status">Status</label>
-              <select id="status" name="status" defaultValue={editingUser?.status ?? "ACTIVE"}>
-                <option value="ACTIVE">ACTIVE</option>
-                <option value="INVITED">INVITED</option>
-                <option value="INACTIVE">INACTIVE</option>
-              </select>
-            </div>
-          </div>
-
-          <button type="submit" className="button primary">
-            {editingUser ? "Salvar alteracoes" : "Criar usuario"}
-          </button>
-        </form>
       </section>
     </div>
   );

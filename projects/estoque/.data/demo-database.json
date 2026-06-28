@@ -168,11 +168,22 @@
       "id": "e03b28e6-9dd3-4393-986e-dd334f9e07b3",
       "companyId": "company-acme",
       "productId": "d58eda8e-1167-49ba-ad80-1059e788077c",
-      "currentQuantity": 0,
-      "updatedAt": "2026-06-28T02:52:24.248Z"
+      "currentQuantity": 2,
+      "updatedAt": "2026-06-28T03:14:36.791Z"
     }
   ],
   "inventoryMovements": [
+    {
+      "id": "19700fbb-b1ac-4e9d-95f8-19feed9b734a",
+      "companyId": "company-acme",
+      "productId": "d58eda8e-1167-49ba-ad80-1059e788077c",
+      "performedByUserId": "18ef0c20-dc88-4ac8-8165-e7bc3addfc0e",
+      "type": "ENTRY",
+      "quantity": 2,
+      "previousQuantity": 0,
+      "resultingQuantity": 2,
+      "createdAt": "2026-06-28T03:14:36.791Z"
+    },
     {
       "id": "276431fc-7023-4fb2-87b1-dd764d7ebcee",
       "companyId": "company-acme",

@@ -39,7 +39,15 @@ export default async function AppLayout({ children }: AppLayoutProps) {
         { href: "/categories/new", label: "Nova", visible: canManageCatalog(session.activeRole) },
       ],
     },
-    { href: "/users", label: "Usuarios", visible: canManageUsers(session.activeRole) },
+    {
+      href: "/users",
+      label: "Usuarios",
+      visible: canManageUsers(session.activeRole),
+      children: [
+        { href: "/users", label: "Listagem", visible: true },
+        { href: "/users/new", label: "Novo", visible: canManageUsers(session.activeRole) },
+      ],
+    },
   ];
 
   return (

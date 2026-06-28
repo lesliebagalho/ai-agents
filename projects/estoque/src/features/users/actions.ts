@@ -8,13 +8,16 @@ import { userSchema } from "@/lib/validation";
 
 export async function saveUserAction(formData: FormData) {
   const session = await requireSessionContext();
+  const userId = formData.get("id");
+  const isEditing = userId && String(userId).trim().length > 0;
+  const basePath = isEditing ? `/users/${userId}` : "/users/new";
 
   if (!canManageUsers(session.activeRole)) {
-    redirect("/users?error=Seu%20perfil%20nao%20pode%20gerenciar%20usuarios.");
+    redirect(`${basePath}?error=Seu%20perfil%20nao%20pode%20gerenciar%20usuarios.`);
   }
 
   const parsed = userSchema.safeParse({
-    id: formData.get("id"),
+    id: userId,
     name: formData.get("name"),
     email: formData.get("email"),
     password: formData.get("password"),
@@ -23,14 +26,14 @@ export async function saveUserAction(formData: FormData) {
   });
 
   if (!parsed.success) {
-    redirect("/users?error=Preencha%20os%20campos%20obrigatorios%20do%20usuario.");
+    redirect(`${basePath}?error=Preencha%20os%20campos%20obrigatorios%20do%20usuario.`);
   }
 
   try {
     await upsertUserForCompany(session.activeCompany.id, parsed.data);
   } catch (error) {
     const message = error instanceof Error ? error.message : "Nao foi possivel salvar o usuario.";
-    redirect(`/users?error=${encodeURIComponent(message)}`);
+    redirect(`${basePath}?error=${encodeURIComponent(message)}`);
   }
 
   revalidatePath("/users");
