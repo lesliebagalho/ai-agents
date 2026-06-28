@@ -17,14 +17,21 @@
     {
       "id": "user-ana",
       "name": "Ana Gestora",
-      "email": "admin@mid.com",
-      "password": "admin123",
+      "email": "ana@estoque.local",
+      "password": "123456",
       "status": "ACTIVE"
     },
     {
       "id": "user-bruno",
       "name": "Bruno Operador",
       "email": "bruno@estoque.local",
+      "password": "123456",
+      "status": "ACTIVE"
+    },
+    {
+      "id": "18ef0c20-dc88-4ac8-8165-e7bc3addfc0e",
+      "name": "Leslie",
+      "email": "leslie@estoque.local",
       "password": "123456",
       "status": "ACTIVE"
     }
@@ -49,6 +56,13 @@
       "userId": "user-bruno",
       "companyId": "company-beta",
       "role": "OPERATOR",
+      "isActive": true
+    },
+    {
+      "id": "e18ebe0c-6d37-4321-bee8-221ea4d00bfd",
+      "userId": "18ef0c20-dc88-4ac8-8165-e7bc3addfc0e",
+      "companyId": "company-acme",
+      "role": "MANAGER",
       "isActive": true
     }
   ],
@@ -121,8 +135,8 @@
       "id": "balance-acme-1",
       "companyId": "company-acme",
       "productId": "product-acme-1",
-      "currentQuantity": 12,
-      "updatedAt": "2026-06-27T20:43:10.685Z"
+      "currentQuantity": 10,
+      "updatedAt": "2026-06-27T22:07:22.232Z"
     },
     {
       "id": "balance-beta-1",
@@ -140,6 +154,18 @@
     }
   ],
   "inventoryMovements": [
+    {
+      "id": "276431fc-7023-4fb2-87b1-dd764d7ebcee",
+      "companyId": "company-acme",
+      "productId": "product-acme-1",
+      "performedByUserId": "18ef0c20-dc88-4ac8-8165-e7bc3addfc0e",
+      "type": "EXIT",
+      "quantity": 2,
+      "previousQuantity": 12,
+      "resultingQuantity": 10,
+      "referenceCode": "65656",
+      "createdAt": "2026-06-27T22:07:22.232Z"
+    },
     {
       "id": "2e98af11-ac02-4fbd-b3cc-e53758cd0e24",
       "companyId": "company-acme",
