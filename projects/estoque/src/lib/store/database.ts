@@ -109,6 +109,11 @@ export async function listCategoriesByCompany(companyId: string) {
     .sort((a, b) => a.name.localeCompare(b.name));
 }
 
+export async function getCompanyById(companyId: string) {
+  const db = await readDatabase();
+  return db.companies.find((company) => company.id === companyId) ?? null;
+}
+
 export async function getCategoryById(companyId: string, categoryId?: string | null) {
   if (!categoryId) {
     return null;

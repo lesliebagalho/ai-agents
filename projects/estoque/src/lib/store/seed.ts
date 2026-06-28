@@ -32,13 +32,6 @@ export const demoSeed: DemoDatabase = {
       isActive: true,
     },
     {
-      id: "uc-2",
-      userId: "user-ana",
-      companyId: "company-beta",
-      role: "MANAGER",
-      isActive: true,
-    },
-    {
       id: "uc-3",
       userId: "user-bruno",
       companyId: "company-beta",

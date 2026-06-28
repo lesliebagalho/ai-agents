@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { logoutAction } from "@/features/auth/actions";
-import { switchCompanyAction } from "@/features/companies/actions";
 import { canManageCatalog, canManageUsers, canRegisterMovements, requireSessionContext } from "@/lib/auth/auth";
 import SidebarNav from "@/components/SidebarNav";
+import CompanyInfo from "@/components/CompanyInfo";
 
 type AppLayoutProps = {
   children: import("react").ReactNode;
@@ -55,25 +55,42 @@ export default async function AppLayout({ children }: AppLayoutProps) {
       <aside className="sidebar">
         <div className="brand">
           <strong>Estoque</strong>
-          <span>Operacao multiempresa em validacao</span>
+          <span>Sistema de gestao</span>
         </div>
 
+        <CompanyInfo
+          name={session.activeCompany.name}
+          role={session.activeRole}
+        />
+
         <SidebarNav links={links} />
+
+        <div className="sidebar-divider"></div>
+
+        <form action={logoutAction} style={{ marginTop: "auto" }}>
+          <button type="submit" className="sidebar-logout">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" />
+              <polyline points="16 17 21 12 16 7" />
+              <line x1="21" y1="12" x2="9" y2="12" />
+            </svg>
+            Sair
+          </button>
+        </form>
       </aside>
 
       <div className="app-main">
         <header className="topbar">
           <div className="topbar-row">
             <div>
-              <p className="eyebrow">Empresa ativa</p>
+              <p className="eyebrow">Ambiente</p>
               <h1 style={{ margin: "8px 0 0", fontSize: "24px" }}>{session.activeCompany.name}</h1>
               <p className="muted" style={{ margin: "6px 0 0" }}>
-                Perfil atual: {session.activeRole}
+                {session.user.name} &middot; {session.activeRole}
               </p>
             </div>
 
             <div className="topbar-meta">
-              <span>{session.user.name}</span>
               <span>{session.user.email}</span>
             </div>
           </div>
@@ -95,28 +112,6 @@ export default async function AppLayout({ children }: AppLayoutProps) {
                   Perfil em leitura.
                 </div>
               ) : null}
-              <form action={switchCompanyAction} className="inline-form">
-                <input type="hidden" name="returnTo" value="/dashboard" />
-                <div className="field">
-                  <label htmlFor="companyId">Empresa</label>
-                  <select id="companyId" name="companyId" defaultValue={session.activeCompany.id}>
-                    {session.memberships.map((membership) => (
-                      <option key={membership.company.id} value={membership.company.id}>
-                        {membership.company.name} ({membership.role})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <button type="submit" className="button secondary">
-                  Trocar contexto
-                </button>
-              </form>
-
-              <form action={logoutAction}>
-                <button type="submit" className="button secondary">
-                  Sair
-                </button>
-              </form>
             </div>
           </div>
         </header>

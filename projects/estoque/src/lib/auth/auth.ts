@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { findUserByCredentials, getCompaniesForUser, getUserById } from "@/lib/store/database";
+import { findUserByCredentials, getCompanyById, getCompaniesForUser, getUserById, listUsersByCompany } from "@/lib/store/database";
 import type { Company, User, UserCompany } from "@/types/domain";
 
 const SESSION_COOKIE = "estoque_session";
@@ -8,17 +8,13 @@ const SESSION_MAX_AGE = 60 * 60 * 8;
 
 type SessionPayload = {
   userId: string;
-  activeCompanyId: string;
+  companyId: string;
 };
 
 export type SessionContext = {
   user: User;
   activeCompany: Company;
   activeRole: UserCompany["role"];
-  memberships: Array<{
-    company: Company;
-    role: UserCompany["role"];
-  }>;
 };
 
 function encodeSession(payload: SessionPayload) {
@@ -32,7 +28,7 @@ function decodeSession(value?: string | null): SessionPayload | null {
 
   try {
     const parsed = JSON.parse(Buffer.from(value, "base64url").toString("utf-8")) as SessionPayload;
-    if (!parsed.userId || !parsed.activeCompanyId) {
+    if (!parsed.userId || !parsed.companyId) {
       return null;
     }
     return parsed;
@@ -48,17 +44,18 @@ export async function createSession(email: string, password: string) {
     return null;
   }
 
+  // Busca a empresa do usuario atraves da relacao userCompanies
   const companies = await getCompaniesForUser(user.id);
-  const firstMembership = companies[0];
+  const membership = companies[0];
 
-  if (!firstMembership) {
+  if (!membership) {
     return null;
   }
 
   const cookieStore = await cookies();
   cookieStore.set(SESSION_COOKIE, encodeSession({
     userId: user.id,
-    activeCompanyId: firstMembership.company.id,
+    companyId: membership.company.id,
   }), {
     httpOnly: true,
     sameSite: "lax",
@@ -69,42 +66,13 @@ export async function createSession(email: string, password: string) {
 
   return {
     user,
-    activeCompany: firstMembership.company,
+    activeCompany: membership.company,
   };
 }
 
 export async function destroySession() {
   const cookieStore = await cookies();
   cookieStore.delete(SESSION_COOKIE);
-}
-
-export async function setActiveCompany(companyId: string) {
-  const cookieStore = await cookies();
-  const current = decodeSession(cookieStore.get(SESSION_COOKIE)?.value);
-
-  if (!current) {
-    return false;
-  }
-
-  const memberships = await getCompaniesForUser(current.userId);
-  const allowed = memberships.some((item) => item.company.id === companyId);
-
-  if (!allowed) {
-    return false;
-  }
-
-  cookieStore.set(SESSION_COOKIE, encodeSession({
-    userId: current.userId,
-    activeCompanyId: companyId,
-  }), {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-    maxAge: SESSION_MAX_AGE,
-  });
-
-  return true;
 }
 
 export async function getSessionContext(): Promise<SessionContext | null> {
@@ -121,35 +89,25 @@ export async function getSessionContext(): Promise<SessionContext | null> {
     return null;
   }
 
-  const memberships = await getCompaniesForUser(user.id);
-  if (memberships.length === 0) {
+  const company = await getCompanyById(session.companyId);
+  if (!company) {
     cookieStore.delete(SESSION_COOKIE);
     return null;
   }
 
-  const activeMembership = memberships.find((item) => item.company.id === session.activeCompanyId) ?? memberships[0];
+  // Busca o role do usuario na empresa
+  const users = await listUsersByCompany(company.id);
+  const membership = users.find((u) => u.id === user.id);
 
-  if (activeMembership.company.id !== session.activeCompanyId) {
-    cookieStore.set(SESSION_COOKIE, encodeSession({
-      userId: user.id,
-      activeCompanyId: activeMembership.company.id,
-    }), {
-      httpOnly: true,
-      sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
-      path: "/",
-      maxAge: SESSION_MAX_AGE,
-    });
+  if (!membership) {
+    cookieStore.delete(SESSION_COOKIE);
+    return null;
   }
 
   return {
     user,
-    activeCompany: activeMembership.company,
-    activeRole: activeMembership.role,
-    memberships: memberships.map((item) => ({
-      company: item.company,
-      role: item.role,
-    })),
+    activeCompany: company,
+    activeRole: membership.membership.role,
   };
 }
 
