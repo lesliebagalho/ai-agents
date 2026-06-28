@@ -102,6 +102,27 @@ textarea {
   gap: 14px;
 }
 
+/* Filtros em uma unica linha horizontal */
+.field-row.filters-row {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: end;
+  gap: 12px;
+}
+
+.field-row.filters-row .field {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.filters-actions {
+  display: flex;
+  align-items: end;
+  gap: 8px;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
 @media (min-width: 760px) {
   .field-row.two {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -109,6 +130,10 @@ textarea {
 
   .field-row.three {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .field-row.three-single {
+    grid-template-columns: 3fr 1fr 1fr;
   }
 }
 
@@ -199,10 +224,11 @@ textarea {
 .sidebar {
   background: #0f172a;
   color: #e2e8f0;
-  padding: 24px 18px;
+  padding: 24px 16px;
   display: grid;
   align-content: start;
-  gap: 18px;
+  gap: 20px;
+  width: 100%;
 }
 
 .brand {
@@ -221,19 +247,93 @@ textarea {
 
 .nav-list {
   display: grid;
-  gap: 6px;
+  gap: 4px;
+  width: 100%;
 }
 
 .nav-link {
+  display: block;
+  width: 100%;
   padding: 10px 12px;
   border-radius: 8px;
   color: #cbd5e1;
+  text-decoration: none;
 }
 
 .nav-link:hover,
 .nav-link.active {
   background: rgba(148, 163, 184, 0.14);
   color: #fff;
+}
+
+/* ---- Submenu sanfona (accordion) ---- */
+
+.nav-group {
+  display: grid;
+  width: 100%;
+}
+
+.nav-accordion {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font: inherit;
+  color: #cbd5e1;
+  padding: 10px 12px;
+  border-radius: 8px;
+  text-align: left;
+  transition: background 0.15s, color 0.15s;
+}
+
+.nav-accordion:hover {
+  background: rgba(148, 163, 184, 0.14);
+  color: #fff;
+}
+
+.nav-accordion.active {
+  background: rgba(148, 163, 184, 0.14);
+  color: #fff;
+}
+
+.accordion-chevron {
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+}
+
+.accordion-chevron.open {
+  transform: rotate(180deg);
+}
+
+.nav-children {
+  display: grid;
+  gap: 2px;
+  margin-top: 2px;
+  width: 100%;
+}
+
+.nav-child {
+  display: block;
+  width: 100%;
+  font-size: 14px;
+  padding: 8px 12px 8px 28px;
+  border-radius: 6px;
+  color: #94a3b8;
+}
+
+.nav-child:hover {
+  background: rgba(148, 163, 184, 0.1);
+  color: #e2e8f0;
+}
+
+.nav-child.active {
+  background: rgba(10, 132, 255, 0.12);
+  color: #60a5fa;
 }
 
 .app-main {

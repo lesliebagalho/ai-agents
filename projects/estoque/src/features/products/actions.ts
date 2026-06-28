@@ -52,7 +52,7 @@ export async function saveProductAction(formData: FormData) {
   });
 
   if (!parsed.success) {
-    redirect("/products?error=Preencha%20os%20campos%20obrigatorios%20do%20produto.");
+    redirect(`/products/new?error=Preencha%20todos%20os%20campos%20obrigatorios%20do%20produto.`);
   }
 
   try {

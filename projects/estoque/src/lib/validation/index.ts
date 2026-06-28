@@ -9,13 +9,13 @@ export const categorySchema = z.object({
   id: z
     .string()
     .trim()
-    .optional()
+    .nullish()
     .transform((value) => value || undefined),
   name: z.string().trim().min(2, "Informe o nome da categoria."),
   description: z
     .string()
     .trim()
-    .optional()
+    .nullish()
     .transform((value) => value || undefined),
 });
 
@@ -23,18 +23,18 @@ export const productSchema = z.object({
   id: z
     .string()
     .trim()
-    .optional()
+    .nullish()
     .transform((value) => value || undefined),
   name: z.string().trim().min(2, "Informe o nome do produto."),
   sku: z
     .string()
     .trim()
-    .optional()
+    .nullish()
     .transform((value) => value || undefined),
   categoryId: z
     .string()
     .trim()
-    .optional()
+    .nullish()
     .transform((value) => value || undefined),
   unit: z.enum(["UNIT", "BOX", "KG", "LITER", "METER"]),
   minimumStock: z
@@ -65,17 +65,17 @@ export const inventoryMovementSchema = z
     reason: z
       .string()
       .trim()
-      .optional()
+      .nullish()
       .transform((value) => value || undefined),
     note: z
       .string()
       .trim()
-      .optional()
+      .nullish()
       .transform((value) => value || undefined),
     referenceCode: z
       .string()
       .trim()
-      .optional()
+      .nullish()
       .transform((value) => value || undefined),
   })
   .superRefine((value, ctx) => {
@@ -100,14 +100,14 @@ export const userSchema = z.object({
   id: z
     .string()
     .trim()
-    .optional()
+    .nullish()
     .transform((value) => value || undefined),
   name: z.string().trim().min(2, "Informe o nome do usuario."),
   email: z.string().trim().email("Informe um email valido."),
   password: z
     .string()
     .trim()
-    .optional()
+    .nullish()
     .transform((value) => value || undefined),
   role: z.enum(["ADMIN", "MANAGER", "OPERATOR", "VIEWER"]),
   status: z.enum(["ACTIVE", "INVITED", "INACTIVE"]),

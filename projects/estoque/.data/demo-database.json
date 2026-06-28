@@ -128,6 +128,18 @@
       "status": "ACTIVE",
       "createdAt": "2026-06-27T20:50:00.651Z",
       "updatedAt": "2026-06-27T20:50:00.651Z"
+    },
+    {
+      "id": "d58eda8e-1167-49ba-ad80-1059e788077c",
+      "companyId": "company-acme",
+      "name": "Notebook",
+      "sku": "NOTINF2535",
+      "categoryId": "0cc9bff9-5b3a-4dcf-93a1-8f70f5798581",
+      "unit": "UNIT",
+      "minimumStock": 2,
+      "status": "ACTIVE",
+      "createdAt": "2026-06-28T02:52:24.248Z",
+      "updatedAt": "2026-06-28T02:52:24.248Z"
     }
   ],
   "inventoryBalances": [
@@ -151,6 +163,13 @@
       "productId": "bd1bdc2c-e348-4728-9763-ccab23eb06c2",
       "currentQuantity": 4,
       "updatedAt": "2026-06-27T20:51:25.957Z"
+    },
+    {
+      "id": "e03b28e6-9dd3-4393-986e-dd334f9e07b3",
+      "companyId": "company-acme",
+      "productId": "d58eda8e-1167-49ba-ad80-1059e788077c",
+      "currentQuantity": 0,
+      "updatedAt": "2026-06-28T02:52:24.248Z"
     }
   ],
   "inventoryMovements": [

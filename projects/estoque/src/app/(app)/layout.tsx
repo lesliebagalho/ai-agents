@@ -2,6 +2,7 @@ import Link from "next/link";
 import { logoutAction } from "@/features/auth/actions";
 import { switchCompanyAction } from "@/features/companies/actions";
 import { canManageCatalog, canManageUsers, canRegisterMovements, requireSessionContext } from "@/lib/auth/auth";
+import SidebarNav from "@/components/SidebarNav";
 
 type AppLayoutProps = {
   children: import("react").ReactNode;
@@ -11,7 +12,15 @@ export default async function AppLayout({ children }: AppLayoutProps) {
   const session = await requireSessionContext();
   const links = [
     { href: "/dashboard", label: "Dashboard", visible: true },
-    { href: "/products", label: "Produtos", visible: true },
+    {
+      href: "/products",
+      label: "Produtos",
+      visible: true,
+      children: [
+        { href: "/products", label: "Listagem", visible: true },
+        { href: "/products/new", label: "Novo", visible: canManageCatalog(session.activeRole) },
+      ],
+    },
     { href: "/inventory", label: "Movimentacoes", visible: true },
     { href: "/categories", label: "Categorias", visible: canManageCatalog(session.activeRole) },
     { href: "/users", label: "Usuarios", visible: canManageUsers(session.activeRole) },
@@ -25,13 +34,7 @@ export default async function AppLayout({ children }: AppLayoutProps) {
           <span>Operacao multiempresa em validacao</span>
         </div>
 
-        <nav className="nav-list">
-          {links.filter((link) => link.visible).map((link) => (
-            <Link key={link.href} href={link.href} className="nav-link">
-              {link.label}
-            </Link>
-          ))}
-        </nav>
+        <SidebarNav links={links} />
       </aside>
 
       <div className="app-main">
