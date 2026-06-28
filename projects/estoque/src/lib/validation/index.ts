@@ -36,6 +36,17 @@ export const productSchema = z.object({
     .trim()
     .nullish()
     .transform((value) => value || undefined),
+  costPrice: z
+    .union([z.string(), z.number(), z.null(), z.undefined()])
+    .transform((value) => {
+      if (value === null || value === undefined || value === "") {
+        return undefined;
+      }
+
+      const numeric = typeof value === "number" ? value : Number(String(value).replace(",", "."));
+      return Number.isFinite(numeric) && numeric >= 0 ? numeric : NaN;
+    })
+    .refine((value) => value === undefined || value >= 0, "Preco de custo invalido."),
   unit: z.enum(["UNIT", "BOX", "KG", "LITER", "METER"]),
   minimumStock: z
     .union([z.string(), z.number(), z.null(), z.undefined()])

@@ -107,6 +107,11 @@ export default function NewProductForm({ categories }: { categories: Category[] 
         </div>
 
         <div className="field">
+          <label htmlFor="costPrice">Preco de custo (R$)</label>
+          <input id="costPrice" name="costPrice" type="number" min="0" step="0.01" placeholder="0,00" />
+        </div>
+
+        <div className="field">
           <label htmlFor="minimumStock">Estoque minimo</label>
           <input id="minimumStock" name="minimumStock" type="number" min="0" step="0.01" />
         </div>

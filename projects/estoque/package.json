@@ -19,6 +19,7 @@
     "react": "latest",
     "react-dom": "latest",
     "react-hook-form": "latest",
+    "recharts": "^3.9.0",
     "zod": "latest"
   },
   "devDependencies": {

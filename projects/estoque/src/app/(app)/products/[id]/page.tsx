@@ -36,7 +36,7 @@ export default async function EditProductPage({ params, searchParams }: EditProd
         </span>
       </div>
 
-      <section className="surface-card section-card" style={{ maxWidth: 640 }}>
+      <section className="surface-card section-card">
         <div className="section-header">
           <h2>Editando: {product.name}</h2>
         </div>
@@ -96,6 +96,21 @@ export default async function EditProductPage({ params, searchParams }: EditProd
               </div>
 
               <div className="field">
+                <label htmlFor="costPrice">Preco de custo (R$)</label>
+                <input
+                  id="costPrice"
+                  name="costPrice"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  defaultValue={product.costPrice ?? ""}
+                  placeholder="0,00"
+                />
+              </div>
+            </div>
+
+            <div className="field-row two">
+              <div className="field">
                 <label htmlFor="minimumStock">Estoque minimo</label>
                 <input
                   id="minimumStock"
@@ -106,14 +121,14 @@ export default async function EditProductPage({ params, searchParams }: EditProd
                   defaultValue={product.minimumStock ?? ""}
                 />
               </div>
-            </div>
 
-            <div className="field">
-              <label htmlFor="status">Status</label>
-              <select id="status" name="status" defaultValue={product.status ?? "ACTIVE"}>
-                <option value="ACTIVE">ACTIVE</option>
-                <option value="INACTIVE">INACTIVE</option>
-              </select>
+              <div className="field">
+                <label htmlFor="status">Status</label>
+                <select id="status" name="status" defaultValue={product.status ?? "ACTIVE"}>
+                  <option value="ACTIVE">ACTIVE</option>
+                  <option value="INACTIVE">INACTIVE</option>
+                </select>
+              </div>
             </div>
 
             <div style={{ display: "flex", gap: 12 }}>

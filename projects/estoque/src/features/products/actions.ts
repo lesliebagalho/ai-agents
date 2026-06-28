@@ -50,6 +50,7 @@ export async function saveProductAction(formData: FormData) {
     name: formData.get("name"),
     sku: formData.get("sku"),
     categoryId: formData.get("categoryId"),
+    costPrice: formData.get("costPrice"),
     unit: formData.get("unit"),
     minimumStock: formData.get("minimumStock"),
     status: formData.get("status"),

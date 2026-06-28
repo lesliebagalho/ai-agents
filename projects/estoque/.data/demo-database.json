@@ -27,13 +27,6 @@
       "email": "bruno@estoque.local",
       "password": "123456",
       "status": "ACTIVE"
-    },
-    {
-      "id": "18ef0c20-dc88-4ac8-8165-e7bc3addfc0e",
-      "name": "Leslie",
-      "email": "leslie@estoque.local",
-      "password": "123456",
-      "status": "ACTIVE"
     }
   ],
   "userCompanies": [
@@ -45,24 +38,10 @@
       "isActive": true
     },
     {
-      "id": "uc-2",
-      "userId": "user-ana",
-      "companyId": "company-beta",
-      "role": "MANAGER",
-      "isActive": true
-    },
-    {
       "id": "uc-3",
       "userId": "user-bruno",
       "companyId": "company-beta",
       "role": "OPERATOR",
-      "isActive": true
-    },
-    {
-      "id": "e18ebe0c-6d37-4321-bee8-221ea4d00bfd",
-      "userId": "18ef0c20-dc88-4ac8-8165-e7bc3addfc0e",
-      "companyId": "company-acme",
-      "role": "MANAGER",
       "isActive": true
     }
   ],
@@ -72,24 +51,16 @@
       "companyId": "company-acme",
       "name": "Insumos",
       "description": "Materiais de consumo recorrente.",
-      "createdAt": "2026-06-27T20:43:10.685Z",
-      "updatedAt": "2026-06-27T20:43:10.685Z"
+      "createdAt": "2026-06-28T03:51:12.260Z",
+      "updatedAt": "2026-06-28T03:51:12.260Z"
     },
     {
       "id": "category-beta-1",
       "companyId": "company-beta",
       "name": "Revenda",
       "description": "Produtos preparados para revenda.",
-      "createdAt": "2026-06-27T20:43:10.685Z",
-      "updatedAt": "2026-06-27T20:43:10.685Z"
-    },
-    {
-      "id": "0cc9bff9-5b3a-4dcf-93a1-8f70f5798581",
-      "companyId": "company-acme",
-      "name": "Informática",
-      "description": "Material de uso como mouse, teclado.",
-      "createdAt": "2026-06-27T20:49:15.129Z",
-      "updatedAt": "2026-06-27T20:49:15.129Z"
+      "createdAt": "2026-06-28T03:51:12.260Z",
+      "updatedAt": "2026-06-28T03:51:12.260Z"
     }
   ],
   "products": [
@@ -99,11 +70,12 @@
       "categoryId": "category-acme-1",
       "name": "Papel A4",
       "sku": "PAP-A4-001",
+      "costPrice": 22.5,
       "unit": "BOX",
       "minimumStock": 5,
       "status": "ACTIVE",
-      "createdAt": "2026-06-27T20:43:10.685Z",
-      "updatedAt": "2026-06-27T20:43:10.685Z"
+      "createdAt": "2026-06-28T03:51:12.260Z",
+      "updatedAt": "2026-06-28T03:51:21.866Z"
     },
     {
       "id": "product-beta-1",
@@ -111,35 +83,12 @@
       "categoryId": "category-beta-1",
       "name": "Caixa Organizadora",
       "sku": "CX-ORG-001",
+      "costPrice": 15.75,
       "unit": "UNIT",
       "minimumStock": 10,
       "status": "ACTIVE",
-      "createdAt": "2026-06-27T20:43:10.685Z",
-      "updatedAt": "2026-06-27T20:43:10.685Z"
-    },
-    {
-      "id": "bd1bdc2c-e348-4728-9763-ccab23eb06c2",
-      "companyId": "company-acme",
-      "name": "Teclado",
-      "sku": "TEC-ABNT2-102",
-      "categoryId": "0cc9bff9-5b3a-4dcf-93a1-8f70f5798581",
-      "unit": "UNIT",
-      "minimumStock": 3,
-      "status": "ACTIVE",
-      "createdAt": "2026-06-27T20:50:00.651Z",
-      "updatedAt": "2026-06-27T20:50:00.651Z"
-    },
-    {
-      "id": "d58eda8e-1167-49ba-ad80-1059e788077c",
-      "companyId": "company-acme",
-      "name": "Notebook",
-      "sku": "NOTINF2535",
-      "categoryId": "0cc9bff9-5b3a-4dcf-93a1-8f70f5798581",
-      "unit": "UNIT",
-      "minimumStock": 2,
-      "status": "ACTIVE",
-      "createdAt": "2026-06-28T02:52:24.248Z",
-      "updatedAt": "2026-06-28T02:52:24.248Z"
+      "createdAt": "2026-06-28T03:51:12.260Z",
+      "updatedAt": "2026-06-28T03:51:12.260Z"
     }
   ],
   "inventoryBalances": [
@@ -147,81 +96,18 @@
       "id": "balance-acme-1",
       "companyId": "company-acme",
       "productId": "product-acme-1",
-      "currentQuantity": 10,
-      "updatedAt": "2026-06-27T22:07:22.232Z"
+      "currentQuantity": 12,
+      "updatedAt": "2026-06-28T03:51:12.260Z"
     },
     {
       "id": "balance-beta-1",
       "companyId": "company-beta",
       "productId": "product-beta-1",
       "currentQuantity": 24,
-      "updatedAt": "2026-06-27T20:43:10.685Z"
-    },
-    {
-      "id": "264781d5-3538-47fd-b273-2553799bfb3e",
-      "companyId": "company-acme",
-      "productId": "bd1bdc2c-e348-4728-9763-ccab23eb06c2",
-      "currentQuantity": 4,
-      "updatedAt": "2026-06-27T20:51:25.957Z"
-    },
-    {
-      "id": "e03b28e6-9dd3-4393-986e-dd334f9e07b3",
-      "companyId": "company-acme",
-      "productId": "d58eda8e-1167-49ba-ad80-1059e788077c",
-      "currentQuantity": 2,
-      "updatedAt": "2026-06-28T03:14:36.791Z"
+      "updatedAt": "2026-06-28T03:51:12.260Z"
     }
   ],
   "inventoryMovements": [
-    {
-      "id": "19700fbb-b1ac-4e9d-95f8-19feed9b734a",
-      "companyId": "company-acme",
-      "productId": "d58eda8e-1167-49ba-ad80-1059e788077c",
-      "performedByUserId": "18ef0c20-dc88-4ac8-8165-e7bc3addfc0e",
-      "type": "ENTRY",
-      "quantity": 2,
-      "previousQuantity": 0,
-      "resultingQuantity": 2,
-      "createdAt": "2026-06-28T03:14:36.791Z"
-    },
-    {
-      "id": "276431fc-7023-4fb2-87b1-dd764d7ebcee",
-      "companyId": "company-acme",
-      "productId": "product-acme-1",
-      "performedByUserId": "18ef0c20-dc88-4ac8-8165-e7bc3addfc0e",
-      "type": "EXIT",
-      "quantity": 2,
-      "previousQuantity": 12,
-      "resultingQuantity": 10,
-      "referenceCode": "65656",
-      "createdAt": "2026-06-27T22:07:22.232Z"
-    },
-    {
-      "id": "2e98af11-ac02-4fbd-b3cc-e53758cd0e24",
-      "companyId": "company-acme",
-      "productId": "bd1bdc2c-e348-4728-9763-ccab23eb06c2",
-      "performedByUserId": "user-ana",
-      "type": "EXIT",
-      "quantity": 1,
-      "previousQuantity": 5,
-      "resultingQuantity": 4,
-      "reason": "Uso",
-      "referenceCode": "55665",
-      "createdAt": "2026-06-27T20:51:25.957Z"
-    },
-    {
-      "id": "a5e3e7be-11a4-4c25-a194-da328ff55128",
-      "companyId": "company-acme",
-      "productId": "bd1bdc2c-e348-4728-9763-ccab23eb06c2",
-      "performedByUserId": "user-ana",
-      "type": "ENTRY",
-      "quantity": 5,
-      "previousQuantity": 0,
-      "resultingQuantity": 5,
-      "reason": "Ajuste",
-      "referenceCode": "3569877",
-      "createdAt": "2026-06-27T20:51:03.806Z"
-    },
     {
       "id": "move-acme-1",
       "companyId": "company-acme",
@@ -232,7 +118,7 @@
       "previousQuantity": 0,
       "resultingQuantity": 12,
       "note": "Carga inicial para validacao.",
-      "createdAt": "2026-06-27T20:43:10.685Z"
+      "createdAt": "2026-06-28T03:51:12.260Z"
     },
     {
       "id": "move-beta-1",
@@ -244,7 +130,7 @@
       "previousQuantity": 0,
       "resultingQuantity": 24,
       "note": "Carga inicial para validacao.",
-      "createdAt": "2026-06-27T20:43:10.685Z"
+      "createdAt": "2026-06-28T03:51:12.260Z"
     }
   ]
 }

@@ -296,6 +296,7 @@ type ProductInput = {
   name: string;
   sku?: string;
   categoryId?: string;
+  costPrice?: number;
   unit: Product["unit"];
   minimumStock?: number;
   status: Product["status"];
@@ -336,6 +337,7 @@ export async function upsertProduct(companyId: string, input: ProductInput) {
             name: input.name.trim(),
             sku,
             categoryId: input.categoryId || undefined,
+            costPrice: input.costPrice,
             unit: input.unit,
             minimumStock: input.minimumStock,
             status: input.status,
@@ -352,6 +354,7 @@ export async function upsertProduct(companyId: string, input: ProductInput) {
       name: input.name.trim(),
       sku,
       categoryId: input.categoryId || undefined,
+      costPrice: input.costPrice,
       unit: input.unit,
       minimumStock: input.minimumStock,
       status: input.status,

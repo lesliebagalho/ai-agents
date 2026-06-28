@@ -42,6 +42,7 @@ export type Product = {
   categoryId?: string;
   name: string;
   sku?: string;
+  costPrice?: number;
   unit: UnitType;
   minimumStock?: number;
   status: ProductStatus;
