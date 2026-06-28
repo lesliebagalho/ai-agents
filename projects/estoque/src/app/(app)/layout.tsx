@@ -21,7 +21,15 @@ export default async function AppLayout({ children }: AppLayoutProps) {
         { href: "/products/new", label: "Novo", visible: canManageCatalog(session.activeRole) },
       ],
     },
-    { href: "/inventory", label: "Movimentacoes", visible: true },
+    {
+      href: "/inventory",
+      label: "Movimentacoes",
+      visible: true,
+      children: [
+        { href: "/inventory", label: "Historico", visible: true },
+        { href: "/inventory/new", label: "Nova", visible: canRegisterMovements(session.activeRole) },
+      ],
+    },
     { href: "/categories", label: "Categorias", visible: canManageCatalog(session.activeRole) },
     { href: "/users", label: "Usuarios", visible: canManageUsers(session.activeRole) },
   ];

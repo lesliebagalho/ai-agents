@@ -1,5 +1,5 @@
-import { saveInventoryMovementAction } from "@/features/products/actions";
 import { canRegisterMovements, requireSessionContext } from "@/lib/auth/auth";
+import Link from "next/link";
 import { listInventoryMovementsByCompany, listProductsWithBalance } from "@/lib/store/database";
 
 type InventoryPageProps = {
@@ -33,77 +33,20 @@ export default async function InventoryPage({ searchParams }: InventoryPageProps
 
   return (
     <div className="stack-lg">
-      <section className="surface-card section-card">
-        <div className="section-header">
-          <h2>Nova movimentacao</h2>
-          <span className="muted">{session.activeCompany.name}</span>
-        </div>
-
-        {params?.error ? <div className="message error" style={{ marginBottom: 16 }}>{params.error}</div> : null}
-        {params?.success ? <div className="message success" style={{ marginBottom: 16 }}>{params.success}</div> : null}
-
-        {!canWrite ? (
-          <div className="message error">Seu perfil nao pode registrar movimentacoes nesta empresa.</div>
-        ) : (
-        <form action={saveInventoryMovementAction} className="field-grid">
-          <div className="field-row three">
-            <div className="field">
-              <label htmlFor="type">Tipo</label>
-              <select id="type" name="type" defaultValue="ENTRY">
-                <option value="ENTRY">Entrada</option>
-                <option value="EXIT">Saida</option>
-                <option value="ADJUSTMENT">Ajuste</option>
-              </select>
-            </div>
-
-            <div className="field">
-              <label htmlFor="productId">Produto</label>
-              <select id="productId" name="productId" required defaultValue="">
-                <option value="" disabled>
-                  Selecione
-                </option>
-                {products.map((product) => (
-                  <option key={product.id} value={product.id}>
-                    {product.name} | saldo atual: {product.currentQuantity}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="field">
-              <label htmlFor="quantity">Quantidade</label>
-              <input id="quantity" name="quantity" type="number" min="0" step="0.01" required />
-            </div>
-          </div>
-
-          <div className="field-row two">
-            <div className="field">
-              <label htmlFor="reason">Motivo</label>
-              <input id="reason" name="reason" placeholder="Obrigatorio para ajuste" />
-            </div>
-
-            <div className="field">
-              <label htmlFor="referenceCode">Referencia</label>
-              <input id="referenceCode" name="referenceCode" placeholder="NF, pedido ou codigo interno" />
-            </div>
-          </div>
-
-          <div className="field">
-            <label htmlFor="note">Observacao</label>
-            <textarea id="note" name="note" placeholder="Detalhes da movimentacao" />
-          </div>
-
-          <button type="submit" className="button primary">
-            Registrar movimentacao
-          </button>
-        </form>
-        )}
-      </section>
+      {params?.error ? <div className="message error" style={{ marginBottom: 16 }}>{params.error}</div> : null}
+      {params?.success ? <div className="message success" style={{ marginBottom: 16 }}>{params.success}</div> : null}
 
       <section className="surface-card section-card">
         <div className="section-header">
           <h2>Historico de movimentacoes</h2>
-          <span className="muted">{movements.length} registro(s)</span>
+          <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+            <span className="muted">{movements.length} registro(s)</span>
+            {canWrite ? (
+              <Link href="/inventory/new" className="button primary" style={{ fontSize: 14 }}>
+                + Nova movimentacao
+              </Link>
+            ) : null}
+          </div>
         </div>
 
         <form action="/inventory" className="field-row three" style={{ marginBottom: 16 }}>

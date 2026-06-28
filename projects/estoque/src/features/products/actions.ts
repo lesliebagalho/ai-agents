@@ -1,4 +1,4 @@
-"use server";
+﻿"use server";
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -70,7 +70,7 @@ export async function saveProductAction(formData: FormData) {
 export async function saveInventoryMovementAction(formData: FormData) {
   const session = await requireSessionContext();
   if (!canRegisterMovements(session.activeRole)) {
-    redirect("/inventory?error=Seu%20perfil%20nao%20pode%20registrar%20movimentacoes.");
+    redirect("/inventory/new?error=Seu%20perfil%20nao%20pode%20registrar%20movimentacoes.");
   }
 
   const parsed = inventoryMovementSchema.safeParse({
@@ -83,18 +83,20 @@ export async function saveInventoryMovementAction(formData: FormData) {
   });
 
   if (!parsed.success) {
-    redirect("/inventory?error=Preencha%20os%20dados%20da%20movimentacao%20corretamente.");
+    redirect(`/inventory/new?error=Preencha%20os%20dados%20da%20movimentacao%20corretamente.`);
   }
 
   try {
     await registerInventoryMovement(session.activeCompany.id, session.user.id, parsed.data);
   } catch (error) {
     const message = error instanceof Error ? error.message : "Nao foi possivel registrar a movimentacao.";
-    redirect(`/inventory?error=${encodeURIComponent(message)}`);
+    redirect(`/inventory/new?error=${encodeURIComponent(message)}`);
   }
 
   revalidatePath("/inventory");
+  revalidatePath("/inventory/new");
   revalidatePath("/products");
   revalidatePath("/dashboard");
   redirect("/inventory?success=Movimentacao%20registrada%20com%20sucesso.");
 }
+
