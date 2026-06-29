@@ -1,6 +1,6 @@
 import { canManageCatalog, requireSessionContext } from "@/lib/auth/auth";
 import { saveProductAction } from "@/features/products/actions";
-import { listCategoriesByCompany } from "@/lib/store/database";
+import { listBrandsByCompany, listCategoriesByCompany, listLocationsByCompany } from "@/lib/store/database";
 import NewProductForm from "./NewProductForm";
 
 type NewProductPageProps = {
@@ -13,7 +13,11 @@ type NewProductPageProps = {
 export default async function NewProductPage({ searchParams }: NewProductPageProps) {
   const session = await requireSessionContext();
   const params = await searchParams;
-  const categories = await listCategoriesByCompany(session.activeCompany.id);
+  const [categories, brands, locations] = await Promise.all([
+    listCategoriesByCompany(session.activeCompany.id),
+    listBrandsByCompany(session.activeCompany.id),
+    listLocationsByCompany(session.activeCompany.id),
+  ]);
   const canEdit = canManageCatalog(session.activeRole);
 
   return (
@@ -38,7 +42,7 @@ export default async function NewProductPage({ searchParams }: NewProductPagePro
         {!canEdit ? (
           <div className="message error">Seu perfil nao pode alterar produtos nesta empresa.</div>
         ) : (
-          <NewProductForm categories={categories} />
+          <NewProductForm categories={categories} brands={brands} locations={locations} />
         )}
       </section>
     </div>

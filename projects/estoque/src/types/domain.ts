@@ -36,21 +36,55 @@ export type Category = {
   updatedAt: string;
 };
 
+export type Brand = {
+  id: string;
+  companyId: string;
+  name: string;
+  description?: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type Location = {
+  id: string;
+  companyId: string;
+  parentId?: string;
+  name: string;
+  level: number;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type Supplier = {
+  id: string;
+  companyId: string;
+  name: string;
+  cnpj?: string;
+  contact?: string;
+  phone?: string;
+  email?: string;
+  address?: string;
+  status: "ACTIVE" | "INACTIVE";
+  createdAt: string;
+  updatedAt: string;
+};
+
 export type Product = {
   id: string;
   companyId: string;
   categoryId?: string;
+  brandId?: string;
+  locationId?: string;
   name: string;
   description?: string;
   code?: string;
   sku?: string;
   barcode?: string;
-  brand?: string;
   costPrice?: number;
   unit: UnitType;
   minimumStock?: number;
   maximumStock?: number;
-  location?: string;
   weight?: number;
   dimensions?: string;
   imageUrl?: string;
@@ -96,6 +130,9 @@ export type DemoDatabase = {
   users: User[];
   userCompanies: UserCompany[];
   categories: Category[];
+  brands: Brand[];
+  locations: Location[];
+  suppliers: Supplier[];
   products: Product[];
   inventoryBalances: InventoryBalance[];
   inventoryMovements: InventoryMovement[];

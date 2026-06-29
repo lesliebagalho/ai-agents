@@ -43,6 +43,24 @@ export default async function AppLayout({ children }: AppLayoutProps) {
       ],
     },
     {
+      href: "/brands",
+      label: "Marcas",
+      visible: canManageCatalog(session.activeRole),
+      children: [
+        { href: "/brands", label: "Listagem", visible: true },
+        { href: "/brands/new", label: "Nova", visible: canManageCatalog(session.activeRole) },
+      ],
+    },
+    {
+      href: "/locations",
+      label: "Localizacoes",
+      visible: canManageCatalog(session.activeRole),
+      children: [
+        { href: "/locations", label: "Listagem", visible: true },
+        { href: "/locations/new", label: "Nova", visible: canManageCatalog(session.activeRole) },
+      ],
+    },
+    {
       href: "/users",
       label: "Usuarios",
       visible: canManageUsers(session.activeRole),

@@ -3,14 +3,17 @@ import path from "node:path";
 import { cache } from "react";
 import { demoSeed } from "@/lib/store/seed";
 import type {
+  Brand,
   Category,
   Company,
   DemoDatabase,
   InventoryBalance,
   InventoryMovement,
   InventoryMovementWithRelations,
+  Location,
   MovementType,
   Product,
+  Supplier,
   User,
   UserWithMembership,
 } from "@/types/domain";
@@ -34,6 +37,9 @@ function normalizeDatabase(raw: Partial<DemoDatabase>): DemoDatabase {
     users: raw.users ?? demoSeed.users,
     userCompanies: raw.userCompanies ?? demoSeed.userCompanies,
     categories: raw.categories ?? demoSeed.categories,
+    brands: raw.brands ?? demoSeed.brands,
+    locations: raw.locations ?? demoSeed.locations,
+    suppliers: raw.suppliers ?? demoSeed.suppliers,
     products: raw.products ?? demoSeed.products,
     inventoryBalances: raw.inventoryBalances ?? demoSeed.inventoryBalances,
     inventoryMovements: raw.inventoryMovements ?? demoSeed.inventoryMovements,
@@ -123,20 +129,170 @@ export async function getCategoryById(companyId: string, categoryId?: string | n
   return db.categories.find((category) => category.id === categoryId && category.companyId === companyId) ?? null;
 }
 
-type CategoryInput = {
+// -------- Brands --------
+
+export async function listBrandsByCompany(companyId: string) {
+  const db = await readDatabase();
+  return db.brands
+    .filter((brand) => brand.companyId === companyId)
+    .sort((a, b) => a.name.localeCompare(b.name));
+}
+
+export async function getBrandById(companyId: string, brandId?: string | null) {
+  if (!brandId) {
+    return null;
+  }
+
+  const db = await readDatabase();
+  return db.brands.find((brand) => brand.id === brandId && brand.companyId === companyId) ?? null;
+}
+
+type BrandInput = {
   id?: string;
   name: string;
   description?: string;
 };
 
-type UserInput = {
+export async function upsertBrand(companyId: string, input: BrandInput) {
+  const db = await readDatabase();
+  const normalizedName = input.name.trim();
+
+  const duplicate = db.brands.find(
+    (brand) =>
+      brand.companyId === companyId &&
+      brand.name.toLowerCase() === normalizedName.toLowerCase() &&
+      brand.id !== input.id,
+  );
+
+  if (duplicate) {
+    throw new Error("Ja existe uma marca com esse nome na empresa ativa.");
+  }
+
+  if (input.id) {
+    db.brands = db.brands.map((brand) =>
+      brand.id === input.id && brand.companyId === companyId
+        ? {
+            ...brand,
+            name: normalizedName,
+            description: input.description?.trim() || undefined,
+            updatedAt: new Date().toISOString(),
+          }
+        : brand,
+    );
+  } else {
+    const now = new Date().toISOString();
+    db.brands.push({
+      id: crypto.randomUUID(),
+      companyId,
+      name: normalizedName,
+      description: input.description?.trim() || undefined,
+      createdAt: now,
+      updatedAt: now,
+    });
+  }
+
+  await writeDatabase(db);
+}
+
+// -------- End Brands --------
+
+// -------- Locations --------
+
+export async function listLocationsByCompany(companyId: string) {
+  const db = await readDatabase();
+  return db.locations
+    .filter((loc) => loc.companyId === companyId)
+    .sort((a, b) => a.level - b.level || a.sortOrder - b.sortOrder);
+}
+
+export async function getLocationById(companyId: string, locationId?: string | null) {
+  if (!locationId) {
+    return null;
+  }
+
+  const db = await readDatabase();
+  return db.locations.find((loc) => loc.id === locationId && loc.companyId === companyId) ?? null;
+}
+
+export async function getLocationPath(companyId: string, locationId: string): Promise<string> {
+  const db = await readDatabase();
+  const parts: string[] = [];
+  let current = db.locations.find((loc) => loc.id === locationId && loc.companyId === companyId);
+
+  while (current) {
+    parts.unshift(current.name);
+    current = current.parentId ? db.locations.find((loc) => loc.id === current!.parentId && loc.companyId === companyId) : undefined;
+  }
+
+  return parts.join(" → ");
+}
+
+type LocationInput = {
   id?: string;
   name: string;
-  email: string;
-  password?: string;
-  role: "ADMIN" | "MANAGER" | "OPERATOR" | "VIEWER";
-  status: "ACTIVE" | "INVITED" | "INACTIVE";
+  parentId?: string;
+  level: number;
+  sortOrder?: number;
 };
+
+export async function upsertLocation(companyId: string, input: LocationInput) {
+  const db = await readDatabase();
+  const normalizedName = input.name.trim();
+
+  if (input.parentId) {
+    const parent = db.locations.find((loc) => loc.id === input.parentId && loc.companyId === companyId);
+    if (!parent) {
+      throw new Error("Localizacao pai nao encontrada.");
+    }
+  }
+
+  if (input.id) {
+    db.locations = db.locations.map((loc) =>
+      loc.id === input.id && loc.companyId === companyId
+        ? {
+            ...loc,
+            name: normalizedName,
+            parentId: input.parentId || undefined,
+            level: input.level,
+            sortOrder: input.sortOrder ?? 0,
+            updatedAt: new Date().toISOString(),
+          }
+        : loc,
+    );
+  } else {
+    const now = new Date().toISOString();
+    db.locations.push({
+      id: crypto.randomUUID(),
+      companyId,
+      name: normalizedName,
+      parentId: input.parentId || undefined,
+      level: input.level,
+      sortOrder: input.sortOrder ?? 0,
+      createdAt: now,
+      updatedAt: now,
+    });
+  }
+
+  await writeDatabase(db);
+}
+
+export async function deleteLocation(companyId: string, locationId: string) {
+  const db = await readDatabase();
+  const hasChildren = db.locations.some((loc) => loc.parentId === locationId && loc.companyId === companyId);
+  if (hasChildren) {
+    throw new Error("Remova as sub-localizacoes antes de excluir esta.");
+  }
+
+  const hasProducts = db.products.some((p) => p.locationId === locationId && p.companyId === companyId);
+  if (hasProducts) {
+    throw new Error("Existem produtos vinculados a esta localizacao.");
+  }
+
+  db.locations = db.locations.filter((loc) => !(loc.id === locationId && loc.companyId === companyId));
+  await writeDatabase(db);
+}
+
+// -------- End Locations --------
 
 export async function upsertCategory(companyId: string, input: CategoryInput) {
   const db = await readDatabase();
@@ -178,6 +334,21 @@ export async function upsertCategory(companyId: string, input: CategoryInput) {
 
   await writeDatabase(db);
 }
+
+type CategoryInput = {
+  id?: string;
+  name: string;
+  description?: string;
+};
+
+type UserInput = {
+  id?: string;
+  name: string;
+  email: string;
+  password?: string;
+  role: "ADMIN" | "MANAGER" | "OPERATOR" | "VIEWER";
+  status: "ACTIVE" | "INVITED" | "INACTIVE";
+};
 
 export async function upsertUserForCompany(companyId: string, input: UserInput) {
   const db = await readDatabase();
@@ -298,13 +469,13 @@ type ProductInput = {
   code?: string;
   sku?: string;
   barcode?: string;
-  brand?: string;
+  brandId?: string;
   categoryId?: string;
+  locationId?: string;
   costPrice?: number;
   unit: Product["unit"];
   minimumStock?: number;
   maximumStock?: number;
-  location?: string;
   weight?: number;
   dimensions?: string;
   imageUrl?: string;
@@ -348,13 +519,13 @@ export async function upsertProduct(companyId: string, input: ProductInput) {
             code: input.code?.trim() || undefined,
             sku,
             barcode: input.barcode?.trim() || undefined,
-            brand: input.brand?.trim() || undefined,
+            brandId: input.brandId || undefined,
             categoryId: input.categoryId || undefined,
             costPrice: input.costPrice,
             unit: input.unit,
             minimumStock: input.minimumStock,
             maximumStock: input.maximumStock,
-            location: input.location?.trim() || undefined,
+            locationId: input.locationId || undefined,
             weight: input.weight,
             dimensions: input.dimensions?.trim() || undefined,
             imageUrl: input.imageUrl?.trim() || undefined,
@@ -374,13 +545,13 @@ export async function upsertProduct(companyId: string, input: ProductInput) {
       code: input.code?.trim() || undefined,
       sku,
       barcode: input.barcode?.trim() || undefined,
-      brand: input.brand?.trim() || undefined,
+      brandId: input.brandId || undefined,
       categoryId: input.categoryId || undefined,
       costPrice: input.costPrice,
       unit: input.unit,
       minimumStock: input.minimumStock,
       maximumStock: input.maximumStock,
-      location: input.location?.trim() || undefined,
+      locationId: input.locationId || undefined,
       weight: input.weight,
       dimensions: input.dimensions?.trim() || undefined,
       imageUrl: input.imageUrl?.trim() || undefined,

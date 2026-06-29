@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { canManageCatalog, requireSessionContext } from "@/lib/auth/auth";
-import { getProductById, listCategoriesByCompany } from "@/lib/store/database";
+import { getProductById, listBrandsByCompany, listCategoriesByCompany, listLocationsByCompany } from "@/lib/store/database";
 import EditProductForm from "./EditProductForm";
 
 type EditProductPageProps = {
@@ -14,10 +14,14 @@ export default async function EditProductPage({ params, searchParams }: EditProd
   const { id } = await params;
   const sp = await searchParams;
 
-  const [categories, product] = await Promise.all([
+  const [categories, brands, locations, product] = await Promise.all([
     listCategoriesByCompany(session.activeCompany.id),
+    listBrandsByCompany(session.activeCompany.id),
+    listLocationsByCompany(session.activeCompany.id),
     getProductById(session.activeCompany.id, id),
   ]);
+
+  const brandMap = Object.fromEntries(brands.map((b) => [b.id, b.name]));
 
   if (!product) {
     notFound();
@@ -45,16 +49,28 @@ export default async function EditProductPage({ params, searchParams }: EditProd
         {!canEdit ? (
           <div className="message error">Seu perfil nao pode alterar produtos nesta empresa.</div>
         ) : (
-          <EditProductForm product={product} categories={categories} />
+          <EditProductForm product={product} categories={categories} brands={brands} locations={locations} />
         )}
 
-        {!canEdit && <ProductReadOnly product={product} />}
+        {!canEdit && <ProductReadOnly product={product} brandMap={brandMap} locations={locations} />}
       </section>
     </div>
   );
 }
 
-function ProductReadOnly({ product }: { product: NonNullable<Awaited<ReturnType<typeof getProductById>>> }) {
+function getLocationPath(locations: Awaited<ReturnType<typeof listLocationsByCompany>>, locationId?: string | null): string {
+  if (!locationId) return "-";
+  const buildPath = (id: string, acc: string[] = []): string[] => {
+    const loc = locations.find((l) => l.id === id);
+    if (!loc) return acc;
+    acc.unshift(loc.name);
+    if (loc.parentId) return buildPath(loc.parentId, acc);
+    return acc;
+  };
+  return buildPath(locationId).join(" → ");
+}
+
+function ProductReadOnly({ product, brandMap, locations }: { product: NonNullable<Awaited<ReturnType<typeof getProductById>>>; brandMap: Record<string, string>; locations: Awaited<ReturnType<typeof listLocationsByCompany>> }) {
   return (
     <div className="field-grid" style={{ marginTop: 24 }}>
       <div className="field-row two">
@@ -78,7 +94,7 @@ function ProductReadOnly({ product }: { product: NonNullable<Awaited<ReturnType<
         </div>
         <div className="field">
           <label>Marca</label>
-          <p className="readonly-field">{product.brand || "-"}</p>
+          <p className="readonly-field">{product.brandId ? brandMap[product.brandId] || "-" : "-"}</p>
         </div>
       </div>
       <div className="field-row two">
@@ -106,7 +122,7 @@ function ProductReadOnly({ product }: { product: NonNullable<Awaited<ReturnType<
         </div>
         <div className="field">
           <label>Localizacao</label>
-          <p className="readonly-field">{product.location || "-"}</p>
+          <p className="readonly-field">{getLocationPath(locations, product.locationId)}</p>
         </div>
       </div>
       <div className="field-row three">

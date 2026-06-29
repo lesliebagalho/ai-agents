@@ -51,16 +51,99 @@
       "companyId": "company-acme",
       "name": "Insumos",
       "description": "Materiais de consumo recorrente.",
-      "createdAt": "2026-06-28T04:32:19.353Z",
-      "updatedAt": "2026-06-28T04:32:19.353Z"
+      "createdAt": "2026-06-29T16:43:48.556Z",
+      "updatedAt": "2026-06-29T16:43:48.556Z"
     },
     {
       "id": "category-beta-1",
       "companyId": "company-beta",
       "name": "Revenda",
       "description": "Produtos preparados para revenda.",
-      "createdAt": "2026-06-28T04:32:19.353Z",
-      "updatedAt": "2026-06-28T04:32:19.353Z"
+      "createdAt": "2026-06-29T16:43:48.556Z",
+      "updatedAt": "2026-06-29T16:43:48.556Z"
+    }
+  ],
+  "brands": [
+    {
+      "id": "brand-acme-1",
+      "companyId": "company-acme",
+      "name": "Nestle",
+      "createdAt": "2026-06-29T16:43:48.556Z",
+      "updatedAt": "2026-06-29T16:43:48.556Z"
+    },
+    {
+      "id": "brand-acme-2",
+      "companyId": "company-acme",
+      "name": "Coca-Cola",
+      "createdAt": "2026-06-29T16:43:48.556Z",
+      "updatedAt": "2026-06-29T16:43:48.556Z"
+    },
+    {
+      "id": "brand-beta-1",
+      "companyId": "company-beta",
+      "name": "3M",
+      "createdAt": "2026-06-29T16:43:48.556Z",
+      "updatedAt": "2026-06-29T16:43:48.556Z"
+    }
+  ],
+  "locations": [
+    {
+      "id": "loc-acme-1",
+      "companyId": "company-acme",
+      "name": "Galpao A",
+      "level": 0,
+      "sortOrder": 1,
+      "createdAt": "2026-06-29T16:43:48.556Z",
+      "updatedAt": "2026-06-29T16:43:48.556Z"
+    },
+    {
+      "id": "loc-acme-2",
+      "companyId": "company-acme",
+      "parentId": "loc-acme-1",
+      "name": "Rua 01",
+      "level": 1,
+      "sortOrder": 1,
+      "createdAt": "2026-06-29T16:43:48.556Z",
+      "updatedAt": "2026-06-29T16:43:48.556Z"
+    },
+    {
+      "id": "loc-acme-3",
+      "companyId": "company-acme",
+      "parentId": "loc-acme-2",
+      "name": "Prateleira 02",
+      "level": 2,
+      "sortOrder": 1,
+      "createdAt": "2026-06-29T16:43:48.556Z",
+      "updatedAt": "2026-06-29T16:43:48.556Z"
+    },
+    {
+      "id": "loc-acme-4",
+      "companyId": "company-acme",
+      "parentId": "loc-acme-3",
+      "name": "Nivel 03",
+      "level": 3,
+      "sortOrder": 1,
+      "createdAt": "2026-06-29T16:43:48.556Z",
+      "updatedAt": "2026-06-29T16:43:48.556Z"
+    },
+    {
+      "id": "loc-beta-1",
+      "companyId": "company-beta",
+      "name": "Deposito Central",
+      "level": 0,
+      "sortOrder": 1,
+      "createdAt": "2026-06-29T16:43:48.556Z",
+      "updatedAt": "2026-06-29T16:43:48.556Z"
+    },
+    {
+      "id": "loc-beta-2",
+      "companyId": "company-beta",
+      "parentId": "loc-beta-1",
+      "name": "Corredor B",
+      "level": 1,
+      "sortOrder": 1,
+      "createdAt": "2026-06-29T16:43:48.556Z",
+      "updatedAt": "2026-06-29T16:43:48.556Z"
     }
   ],
   "products": [
@@ -74,9 +157,9 @@
       "unit": "BOX",
       "minimumStock": 5,
       "status": "ACTIVE",
-      "createdAt": "2026-06-28T04:32:19.353Z",
-      "updatedAt": "2026-06-28T04:42:23.155Z",
-      "imageUrl": "data:image/webp;base64,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"
+      "createdAt": "2026-06-29T16:43:48.556Z",
+      "updatedAt": "2026-06-29T17:00:06.306Z",
+      "locationId": "loc-acme-4"
     },
     {
       "id": "product-beta-1",
@@ -88,8 +171,8 @@
       "unit": "UNIT",
       "minimumStock": 10,
       "status": "ACTIVE",
-      "createdAt": "2026-06-28T04:32:19.353Z",
-      "updatedAt": "2026-06-28T04:32:19.353Z"
+      "createdAt": "2026-06-29T16:43:48.556Z",
+      "updatedAt": "2026-06-29T16:43:48.556Z"
     }
   ],
   "inventoryBalances": [
@@ -98,14 +181,14 @@
       "companyId": "company-acme",
       "productId": "product-acme-1",
       "currentQuantity": 12,
-      "updatedAt": "2026-06-28T04:32:19.353Z"
+      "updatedAt": "2026-06-29T16:43:48.556Z"
     },
     {
       "id": "balance-beta-1",
       "companyId": "company-beta",
       "productId": "product-beta-1",
       "currentQuantity": 24,
-      "updatedAt": "2026-06-28T04:32:19.353Z"
+      "updatedAt": "2026-06-29T16:43:48.556Z"
     }
   ],
   "inventoryMovements": [
@@ -119,7 +202,7 @@
       "previousQuantity": 0,
       "resultingQuantity": 12,
       "note": "Carga inicial para validacao.",
-      "createdAt": "2026-06-28T04:32:19.353Z"
+      "createdAt": "2026-06-29T16:43:48.556Z"
     },
     {
       "id": "move-beta-1",
@@ -131,7 +214,7 @@
       "previousQuantity": 0,
       "resultingQuantity": 24,
       "note": "Carga inicial para validacao.",
-      "createdAt": "2026-06-28T04:32:19.353Z"
+      "createdAt": "2026-06-29T16:43:48.556Z"
     }
   ]
 }

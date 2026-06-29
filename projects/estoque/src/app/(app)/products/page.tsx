@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { canManageCatalog, requireSessionContext } from "@/lib/auth/auth";
-import { listCategoriesByCompany, listProductsWithBalance } from "@/lib/store/database";
+import { listBrandsByCompany, listCategoriesByCompany, listLocationsByCompany, listProductsWithBalance } from "@/lib/store/database";
 import ProductThumb from "@/components/ProductThumb";
 
 type ProductsPageProps = {
@@ -13,6 +13,18 @@ type ProductsPageProps = {
   }>;
 };
 
+function getLocationPath(locations: Awaited<ReturnType<typeof listLocationsByCompany>>, locationId?: string | null): string {
+  if (!locationId) return "-";
+  const buildPath = (id: string, acc: string[] = []): string[] => {
+    const loc = locations.find((l) => l.id === id);
+    if (!loc) return acc;
+    acc.unshift(loc.name);
+    if (loc.parentId) return buildPath(loc.parentId, acc);
+    return acc;
+  };
+  return buildPath(locationId).join(" → ");
+}
+
 export default async function ProductsPage({ searchParams }: ProductsPageProps) {
   const session = await requireSessionContext();
   const params = await searchParams;
@@ -22,10 +34,14 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
     status: params?.status,
   };
 
-  const [categories, products] = await Promise.all([
+  const [categories, brands, locations, products] = await Promise.all([
     listCategoriesByCompany(session.activeCompany.id),
+    listBrandsByCompany(session.activeCompany.id),
+    listLocationsByCompany(session.activeCompany.id),
     listProductsWithBalance(session.activeCompany.id, filters),
   ]);
+  const brandMap = Object.fromEntries(brands.map((b) => [b.id, b.name]));
+  const locationMap = Object.fromEntries(locations.map((l) => [l.id, l.name]));
   const canEdit = canManageCatalog(session.activeRole);
 
   return (
@@ -112,6 +128,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
                   <th>Produto</th>
                   <th>SKU</th>
                   <th>Categoria</th>
+                  <th>Marca</th>
                   <th>Unidade</th>
                   <th>Saldo</th>
                   <th>Minimo</th>
@@ -131,6 +148,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
                       <td>{product.name}</td>
                       <td>{product.sku || "-"}</td>
                       <td>{category?.name || "-"}</td>
+                      <td>{product.brandId ? brandMap[product.brandId] || "-" : "-"}</td>
                       <td>{product.unit}</td>
                       <td>{product.currentQuantity}</td>
                       <td>{product.minimumStock ?? "-"}</td>

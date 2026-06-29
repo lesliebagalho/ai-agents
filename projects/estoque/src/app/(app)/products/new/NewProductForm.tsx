@@ -9,6 +9,18 @@ type Category = {
   name: string;
 };
 
+type Brand = {
+  id: string;
+  name: string;
+};
+
+type LocationItem = {
+  id: string;
+  parentId?: string;
+  name: string;
+  level: number;
+};
+
 function generateSku(name: string, categoryName: string): string {
   const namePart = name.replace(/[^a-zA-Z0-9]/g, "").slice(0, 3).toUpperCase();
   const catPart = categoryName.replace(/[^a-zA-Z0-9]/g, "").slice(0, 4).toUpperCase();
@@ -16,7 +28,19 @@ function generateSku(name: string, categoryName: string): string {
   return `${namePart}-${catPart}-${randomPart}`;
 }
 
-export default function NewProductForm({ categories }: { categories: Category[] }) {
+function getLocationPath(locations: LocationItem[], locationId?: string | null): string {
+  if (!locationId) return "";
+  const buildPath = (id: string, acc: string[] = []): string[] => {
+    const loc = locations.find((l) => l.id === id);
+    if (!loc) return acc;
+    acc.unshift(loc.name);
+    if (loc.parentId) return buildPath(loc.parentId, acc);
+    return acc;
+  };
+  return buildPath(locationId).join(" → ");
+}
+
+export default function NewProductForm({ categories, brands, locations }: { categories: Category[]; brands: Brand[]; locations: LocationItem[] }) {
   const [name, setName] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [sku, setSku] = useState("");
@@ -77,8 +101,13 @@ export default function NewProductForm({ categories }: { categories: Category[] 
           <input id="barcode" name="barcode" placeholder="Ex: 7891234567890" />
         </div>
         <div className="field">
-          <label htmlFor="brand">Marca</label>
-          <input id="brand" name="brand" placeholder="Ex: Nestle, Coca-Cola" />
+          <label htmlFor="brandId">Marca</label>
+          <select id="brandId" name="brandId" defaultValue="">
+            <option value="">Sem marca</option>
+            {brands.map((brand) => (
+              <option key={brand.id} value={brand.id}>{brand.name}</option>
+            ))}
+          </select>
         </div>
       </div>
 
@@ -125,8 +154,15 @@ export default function NewProductForm({ categories }: { categories: Category[] 
           <input id="maximumStock" name="maximumStock" type="number" min="0" step="0.01" />
         </div>
         <div className="field">
-          <label htmlFor="location">Localizacao</label>
-          <input id="location" name="location" placeholder="Ex: Galpao A, Prateleira 3" />
+          <label htmlFor="locationId">Localizacao</label>
+          <select id="locationId" name="locationId" defaultValue="">
+            <option value="">Sem localizacao</option>
+            {locations.map((loc) => (
+              <option key={loc.id} value={loc.id}>
+                {"  ".repeat(loc.level)}{getLocationPath(locations, loc.id)}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
 

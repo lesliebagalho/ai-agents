@@ -3,8 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { canManageCatalog, canRegisterMovements, requireSessionContext } from "@/lib/auth/auth";
-import { listProductsByCompany, registerInventoryMovement, upsertCategory, upsertProduct } from "@/lib/store/database";
-import { categorySchema, inventoryMovementSchema, productSchema } from "@/lib/validation";
+import { deleteLocation, listBrandsByCompany, listProductsByCompany, registerInventoryMovement, upsertBrand, upsertCategory, upsertLocation, upsertProduct } from "@/lib/store/database";
+import { brandSchema, categorySchema, inventoryMovementSchema, locationSchema, productSchema } from "@/lib/validation";
 
 export async function saveCategoryAction(formData: FormData) {
   const session = await requireSessionContext();
@@ -52,13 +52,13 @@ export async function saveProductAction(formData: FormData) {
     code: formData.get("code"),
     sku: formData.get("sku"),
     barcode: formData.get("barcode"),
-    brand: formData.get("brand"),
+    brandId: formData.get("brandId"),
     categoryId: formData.get("categoryId"),
     costPrice: formData.get("costPrice"),
     unit: formData.get("unit"),
     minimumStock: formData.get("minimumStock"),
     maximumStock: formData.get("maximumStock"),
-    location: formData.get("location"),
+    locationId: formData.get("locationId"),
     weight: formData.get("weight"),
     dimensions: formData.get("dimensions"),
     imageUrl: formData.get("imageUrl"),
@@ -123,7 +123,12 @@ export async function exportProductsCsvAction() {
     return { error: "Sem permissao para exportar produtos." };
   }
 
-  const products = await listProductsByCompany(session.activeCompany.id);
+  const [products, brands] = await Promise.all([
+    listProductsByCompany(session.activeCompany.id),
+    listBrandsByCompany(session.activeCompany.id),
+  ]);
+
+  const brandMap = Object.fromEntries(brands.map((b) => [b.id, b.name]));
 
   const headers = [
     "Codigo",
@@ -150,12 +155,12 @@ export async function exportProductsCsvAction() {
     product.name,
     product.description || "",
     product.categoryId || "",
-    product.brand || "",
+    product.brandId ? brandMap[product.brandId] || "" : "",
     product.unit,
     product.costPrice != null ? String(product.costPrice) : "",
     product.minimumStock != null ? String(product.minimumStock) : "",
     product.maximumStock != null ? String(product.maximumStock) : "",
-    product.location || "",
+    product.locationId || "",
     product.weight != null ? String(product.weight) : "",
     product.dimensions || "",
     product.status,
@@ -240,5 +245,97 @@ export async function importProductsFromCsvAction(formData: FormData) {
   revalidatePath("/dashboard");
 
   return { imported, errors };
+}
+
+export async function saveBrandAction(formData: FormData) {
+  const session = await requireSessionContext();
+  const brandId = formData.get("id");
+  const isEditing = brandId && String(brandId).trim().length > 0;
+  const basePath = isEditing ? `/brands/${brandId}` : "/brands/new";
+
+  if (!canManageCatalog(session.activeRole)) {
+    redirect(`${basePath}?error=Seu%20perfil%20nao%20pode%20alterar%20marcas.`);
+  }
+
+  const parsed = brandSchema.safeParse({
+    id: brandId,
+    name: formData.get("name"),
+    description: formData.get("description"),
+  });
+
+  if (!parsed.success) {
+    redirect(`${basePath}?error=Preencha%20os%20campos%20obrigatorios%20da%20marca.`);
+  }
+
+  try {
+    await upsertBrand(session.activeCompany.id, parsed.data);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Nao foi possivel salvar a marca.";
+    redirect(`${basePath}?error=${encodeURIComponent(message)}`);
+  }
+
+  revalidatePath("/brands");
+  revalidatePath("/products");
+  revalidatePath("/dashboard");
+  redirect("/brands?success=Marca%20salva%20com%20sucesso.");
+}
+
+export async function saveLocationAction(formData: FormData) {
+  const session = await requireSessionContext();
+  const locationId = formData.get("id");
+  const isEditing = locationId && String(locationId).trim().length > 0;
+  const basePath = isEditing ? `/locations/${locationId}` : "/locations/new";
+
+  if (!canManageCatalog(session.activeRole)) {
+    redirect(`${basePath}?error=Seu%20perfil%20nao%20pode%20alterar%20localizacoes.`);
+  }
+
+  const parsed = locationSchema.safeParse({
+    id: locationId,
+    name: formData.get("name"),
+    parentId: formData.get("parentId"),
+    level: formData.get("level"),
+    sortOrder: formData.get("sortOrder"),
+  });
+
+  if (!parsed.success) {
+    redirect(`${basePath}?error=Preencha%20os%20campos%20obrigatorios%20da%20localizacao.`);
+  }
+
+  try {
+    await upsertLocation(session.activeCompany.id, parsed.data);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Nao foi possivel salvar a localizacao.";
+    redirect(`${basePath}?error=${encodeURIComponent(message)}`);
+  }
+
+  revalidatePath("/locations");
+  revalidatePath("/products");
+  revalidatePath("/dashboard");
+  redirect("/locations?success=Localizacao%20salva%20com%20sucesso.");
+}
+
+export async function deleteLocationAction(formData: FormData) {
+  const session = await requireSessionContext();
+  const locationId = formData.get("id");
+
+  if (!canManageCatalog(session.activeRole)) {
+    redirect(`/locations?error=Sem%20permissao.`);
+  }
+
+  if (!locationId || String(locationId).trim().length === 0) {
+    redirect(`/locations?error=ID%20invalido.`);
+  }
+
+  try {
+    await deleteLocation(session.activeCompany.id, String(locationId));
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Nao foi possivel excluir.";
+    redirect(`/locations?error=${encodeURIComponent(message)}`);
+  }
+
+  revalidatePath("/locations");
+  revalidatePath("/products");
+  redirect("/locations?success=Localizacao%20excluida.");
 }
 

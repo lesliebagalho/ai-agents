@@ -8,17 +8,17 @@ type ProductData = {
   id: string;
   companyId: string;
   categoryId?: string | null;
+  brandId?: string | null;
+  locationId?: string | null;
   name: string;
   description?: string | null;
   code?: string | null;
   sku?: string | null;
   barcode?: string | null;
-  brand?: string | null;
   costPrice?: number | null;
   unit: string;
   minimumStock?: number | null;
   maximumStock?: number | null;
-  location?: string | null;
   weight?: number | null;
   dimensions?: string | null;
   imageUrl?: string | null;
@@ -30,12 +30,40 @@ type Category = {
   name: string;
 };
 
+type Brand = {
+  id: string;
+  name: string;
+};
+
+type LocationItem = {
+  id: string;
+  parentId?: string;
+  name: string;
+  level: number;
+};
+
+function getLocationPath(locations: LocationItem[], locationId?: string | null): string {
+  if (!locationId) return "";
+  const buildPath = (id: string, acc: string[] = []): string[] => {
+    const loc = locations.find((l) => l.id === id);
+    if (!loc) return acc;
+    acc.unshift(loc.name);
+    if (loc.parentId) return buildPath(loc.parentId, acc);
+    return acc;
+  };
+  return buildPath(locationId).join(" → ");
+}
+
 export default function EditProductForm({
   product,
   categories,
+  brands,
+  locations,
 }: {
   product: ProductData;
   categories: Category[];
+  brands: Brand[];
+  locations: LocationItem[];
 }) {
   return (
     <form action={saveProductAction} className="field-grid">
@@ -63,8 +91,13 @@ export default function EditProductForm({
           <input id="barcode" name="barcode" defaultValue={product.barcode ?? ""} placeholder="Ex: 7891234567890" />
         </div>
         <div className="field">
-          <label htmlFor="brand">Marca</label>
-          <input id="brand" name="brand" defaultValue={product.brand ?? ""} placeholder="Ex: Nestle, Coca-Cola" />
+          <label htmlFor="brandId">Marca</label>
+          <select id="brandId" name="brandId" defaultValue={product.brandId ?? ""}>
+            <option value="">Sem marca</option>
+            {brands.map((brand) => (
+              <option key={brand.id} value={brand.id}>{brand.name}</option>
+            ))}
+          </select>
         </div>
       </div>
 
@@ -111,8 +144,15 @@ export default function EditProductForm({
           <input id="maximumStock" name="maximumStock" type="number" min="0" step="0.01" defaultValue={product.maximumStock ?? ""} />
         </div>
         <div className="field">
-          <label htmlFor="location">Localizacao</label>
-          <input id="location" name="location" defaultValue={product.location ?? ""} placeholder="Ex: Galpao A, Prateleira 3" />
+          <label htmlFor="locationId">Localizacao</label>
+          <select id="locationId" name="locationId" defaultValue={product.locationId ?? ""}>
+            <option value="">Sem localizacao</option>
+            {locations.map((loc) => (
+              <option key={loc.id} value={loc.id}>
+                {"  ".repeat(loc.level)}{getLocationPath(locations, loc.id)}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
 

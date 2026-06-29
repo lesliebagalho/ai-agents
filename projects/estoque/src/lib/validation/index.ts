@@ -19,6 +19,83 @@ export const categorySchema = z.object({
     .transform((value) => value || undefined),
 });
 
+export const brandSchema = z.object({
+  id: z
+    .string()
+    .trim()
+    .nullish()
+    .transform((value) => value || undefined),
+  name: z.string().trim().min(2, "Informe o nome da marca."),
+  description: z
+    .string()
+    .trim()
+    .nullish()
+    .transform((value) => value || undefined),
+});
+
+export const locationSchema = z.object({
+  id: z
+    .string()
+    .trim()
+    .nullish()
+    .transform((value) => value || undefined),
+  name: z.string().trim().min(1, "Informe o nome da localizacao."),
+  parentId: z
+    .string()
+    .trim()
+    .nullish()
+    .transform((value) => value || undefined),
+  level: z
+    .union([z.string(), z.number()])
+    .transform((value) => {
+      const numeric = typeof value === "number" ? value : Number(String(value));
+      return Number.isFinite(numeric) ? numeric : 0;
+    }),
+  sortOrder: z
+    .union([z.string(), z.number()])
+    .nullish()
+    .transform((value) => {
+      if (value === null || value === undefined || value === "") return 0;
+      const numeric = typeof value === "number" ? value : Number(String(value));
+      return Number.isFinite(numeric) ? numeric : 0;
+    }),
+});
+
+export const supplierSchema = z.object({
+  id: z
+    .string()
+    .trim()
+    .nullish()
+    .transform((value) => value || undefined),
+  name: z.string().trim().min(2, "Informe o nome do fornecedor."),
+  cnpj: z
+    .string()
+    .trim()
+    .nullish()
+    .transform((value) => value?.replace(/\D/g, "") || undefined),
+  contact: z
+    .string()
+    .trim()
+    .nullish()
+    .transform((value) => value || undefined),
+  phone: z
+    .string()
+    .trim()
+    .nullish()
+    .transform((value) => value || undefined),
+  email: z
+    .string()
+    .trim()
+    .nullish()
+    .transform((value) => value || undefined),
+  address: z
+    .string()
+    .trim()
+    .nullish()
+    .transform((value) => value || undefined),
+  status: z.enum(["ACTIVE", "INACTIVE"]).default("ACTIVE"),
+});
+
 export const productSchema = z.object({
   id: z
     .string()
@@ -46,7 +123,7 @@ export const productSchema = z.object({
     .trim()
     .nullish()
     .transform((value) => value || undefined),
-  brand: z
+  brandId: z
     .string()
     .trim()
     .nullish()
@@ -90,7 +167,7 @@ export const productSchema = z.object({
       return Number.isFinite(numeric) ? numeric : NaN;
     })
     .refine((value) => value === undefined || value >= 0, "Estoque maximo invalido."),
-  location: z
+  locationId: z
     .string()
     .trim()
     .nullish()
