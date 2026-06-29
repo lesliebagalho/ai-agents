@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { canManageUsers, requireSessionContext } from "@/lib/auth/auth";
 import { saveUserAction } from "@/features/users/actions";
 
@@ -54,12 +55,16 @@ export default async function NewUserPage({ searchParams }: NewUserPageProps) {
           <div className="field-row two">
             <div className="field">
               <label htmlFor="role">Perfil *</label>
-              <select id="role" name="role" defaultValue="OPERATOR">
-                <option value="ADMIN">ADMIN</option>
-                <option value="MANAGER">MANAGER</option>
-                <option value="OPERATOR">OPERATOR</option>
-                <option value="VIEWER">VIEWER</option>
+              <select id="role" name="role" defaultValue="STORAGE_CLERK">
+                <option value="ADMIN">Administrador</option>
+                <option value="SUPERVISOR">Supervisor</option>
+                <option value="STORAGE_CLERK">Almoxarife</option>
+                <option value="BUYER">Comprador</option>
+                <option value="VIEWER">Consulta</option>
               </select>
+              <p className="muted" style={{ fontSize: 12, marginTop: 2 }}>
+                <Link href="/users/profiles" className="link-button" style={{ fontSize: 12 }}>Ver descricao dos perfis</Link>
+              </p>
             </div>
 
             <div className="field">

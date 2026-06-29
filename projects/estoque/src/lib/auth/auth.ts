@@ -122,13 +122,13 @@ export async function requireSessionContext() {
 }
 
 export function canManageCatalog(role: UserCompany["role"]) {
-  return role === "ADMIN" || role === "MANAGER";
+  return role === "ADMIN" || role === "SUPERVISOR";
 }
 
 export function canRegisterMovements(role: UserCompany["role"]) {
-  return role === "ADMIN" || role === "MANAGER" || role === "OPERATOR";
+  return role === "ADMIN" || role === "SUPERVISOR" || role === "STORAGE_CLERK";
 }
 
 export function canManageUsers(role: UserCompany["role"]) {
-  return role === "ADMIN" || role === "MANAGER";
+  return role === "ADMIN";
 }

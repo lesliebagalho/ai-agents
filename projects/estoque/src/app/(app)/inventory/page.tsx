@@ -1,6 +1,7 @@
 import { canRegisterMovements, requireSessionContext } from "@/lib/auth/auth";
 import Link from "next/link";
 import { listInventoryMovementsByCompany, listProductsWithBalance } from "@/lib/store/database";
+import MovementsFilter from "./MovementsFilter";
 
 type InventoryPageProps = {
   searchParams?: Promise<{
@@ -11,9 +12,22 @@ type InventoryPageProps = {
   }>;
 };
 
+const MOVEMENT_TYPE_LABELS: Record<string, string> = {
+  ENTRY: "Entrada",
+  EXIT: "Saida",
+  ADJUSTMENT: "Ajuste",
+  SALE: "Venda",
+  INTERNAL_CONSUMPTION: "Consumo interno",
+  LOSS: "Perda",
+  BREAKAGE: "Quebra",
+  NEGATIVE_ADJUSTMENT: "Ajuste negativo",
+};
+
 function getMovementBadgeClass(type: string) {
-  if (type === "ENTRY") return "status-badge entry";
-  if (type === "EXIT") return "status-badge exit";
+  const entryTypes = ["ENTRY"];
+  const exitTypes = ["EXIT", "SALE", "INTERNAL_CONSUMPTION", "LOSS", "BREAKAGE", "NEGATIVE_ADJUSTMENT"];
+  if (entryTypes.includes(type)) return "status-badge entry";
+  if (exitTypes.includes(type)) return "status-badge exit";
   return "status-badge adjustment";
 }
 
@@ -38,7 +52,7 @@ export default async function InventoryPage({ searchParams }: InventoryPageProps
 
       <section className="surface-card section-card">
         <div className="section-header">
-          <h2>Historico de movimentacoes</h2>
+          <h2>Historico geral de movimentacoes</h2>
           <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
             <span className="muted">{movements.length} registro(s)</span>
             {canWrite ? (
@@ -49,44 +63,18 @@ export default async function InventoryPage({ searchParams }: InventoryPageProps
           </div>
         </div>
 
-        <form action="/inventory" className="field-row three" style={{ marginBottom: 16 }}>
-          <div className="field">
-            <label htmlFor="productIdFilter">Produto</label>
-            <select id="productIdFilter" name="productId" defaultValue={params?.productId ?? ""}>
-              <option value="">Todos</option>
-              {products.map((product) => (
-                <option key={product.id} value={product.id}>
-                  {product.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="field">
-            <label htmlFor="typeFilter">Tipo</label>
-            <select id="typeFilter" name="type" defaultValue={params?.type ?? "ALL"}>
-              <option value="ALL">Todos</option>
-              <option value="ENTRY">Entradas</option>
-              <option value="EXIT">Saidas</option>
-              <option value="ADJUSTMENT">Ajustes</option>
-            </select>
-          </div>
-
-          <div style={{ display: "flex", alignItems: "end", gap: 12 }}>
-            <button type="submit" className="button secondary">
-              Filtrar
-            </button>
-            <a href="/inventory" className="link-button">
-              Limpar
-            </a>
-          </div>
-        </form>
+        {/* Filtros avancados */}
+        <MovementsFilter
+          products={products}
+          currentProductId={params?.productId ?? ""}
+          currentType={params?.type ?? "ALL"}
+        />
 
         {movements.length === 0 ? (
           <div className="empty-state">Nenhuma movimentacao encontrada para os filtros atuais.</div>
         ) : (
           <div className="table-wrap">
-            <table className="data-table">
+            <table className="data-table" style={{ fontSize: 13 }}>
               <thead>
                 <tr>
                   <th>Data</th>
@@ -95,25 +83,51 @@ export default async function InventoryPage({ searchParams }: InventoryPageProps
                   <th>Quantidade</th>
                   <th>Saldo anterior</th>
                   <th>Saldo resultante</th>
-                  <th>Usuario</th>
-                  <th>Motivo / Observacao</th>
+                  <th>Responsavel</th>
+                  <th>Referencia</th>
+                  <th>Auditoria</th>
                 </tr>
               </thead>
               <tbody>
                 {movements.map((movement) => (
                   <tr key={movement.id}>
-                    <td>{new Date(movement.createdAt).toLocaleString("pt-BR")}</td>
-                    <td>
-                      <span className={getMovementBadgeClass(movement.type)}>{movement.type}</span>
+                    <td style={{ whiteSpace: "nowrap" }}>
+                      {new Date(movement.createdAt).toLocaleDateString("pt-BR")}
+                      <br />
+                      <span className="muted" style={{ fontSize: 11 }}>
+                        {new Date(movement.createdAt).toLocaleTimeString("pt-BR")}
+                      </span>
                     </td>
-                    <td>{movement.product.name}</td>
-                    <td>{movement.quantity}</td>
-                    <td>{movement.previousQuantity}</td>
-                    <td>{movement.resultingQuantity}</td>
+                    <td>
+                      <span className={getMovementBadgeClass(movement.type)}>
+                        {MOVEMENT_TYPE_LABELS[movement.type] || movement.type}
+                      </span>
+                    </td>
+                    <td>
+                      <Link href={`/products/${movement.product.id}`} className="link-button" style={{ fontSize: 13 }}>
+                        {movement.product.name}
+                      </Link>
+                    </td>
+                    <td style={{ fontWeight: 600 }}>{movement.quantity}</td>
+                    <td style={{ textAlign: "center" }}>{movement.previousQuantity}</td>
+                    <td style={{ textAlign: "center" }}>{movement.resultingQuantity}</td>
                     <td>{movement.user.name}</td>
                     <td>
-                      <div>{movement.reason || "-"}</div>
-                      {movement.note ? <div className="muted">{movement.note}</div> : null}
+                      <div>{movement.referenceCode || "-"}</div>
+                      {movement.note ? <div className="muted" style={{ fontSize: 11 }}>{movement.note}</div> : null}
+                    </td>
+                    <td>
+                      <details style={{ fontSize: 12 }}>
+                        <summary style={{ cursor: "pointer", color: "var(--primary)" }}>Detalhes</summary>
+                        <div style={{ marginTop: 6, padding: 8, background: "var(--surface-alt, #f7fafc)", borderRadius: 6 }}>
+                          <div><strong>ID:</strong> {movement.id.slice(0, 8)}...</div>
+                          <div><strong>Tipo:</strong> {movement.type}</div>
+                          <div><strong>Motivo:</strong> {movement.reason || "-"}</div>
+                          <div><strong>Obs:</strong> {movement.note || "-"}</div>
+                          <div><strong>Ref:</strong> {movement.referenceCode || "-"}</div>
+                          <div><strong>Usuario:</strong> {movement.user.email}</div>
+                        </div>
+                      </details>
                     </td>
                   </tr>
                 ))}
@@ -125,3 +139,4 @@ export default async function InventoryPage({ searchParams }: InventoryPageProps
     </div>
   );
 }
+

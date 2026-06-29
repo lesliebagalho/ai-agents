@@ -9,6 +9,25 @@ type UsersPageProps = {
   }>;
 };
 
+const ROLE_LABELS: Record<string, string> = {
+  ADMIN: "Administrador",
+  SUPERVISOR: "Supervisor",
+  STORAGE_CLERK: "Almoxarife",
+  BUYER: "Comprador",
+  VIEWER: "Consulta",
+};
+
+function getRoleBadge(role: string) {
+  const map: Record<string, string> = {
+    ADMIN: "badge-admin",
+    SUPERVISOR: "badge-supervisor",
+    STORAGE_CLERK: "badge-clerk",
+    BUYER: "badge-buyer",
+    VIEWER: "badge-viewer",
+  };
+  return map[role] || "";
+}
+
 export default async function UsersPage({ searchParams }: UsersPageProps) {
   const session = await requireSessionContext();
   const params = await searchParams;
@@ -49,6 +68,7 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
                 <th>Nome</th>
                 <th>Email</th>
                 <th>Perfil</th>
+                <th>Permissoes</th>
                 <th>Status</th>
                 <th>Acoes</th>
               </tr>
@@ -58,9 +78,18 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
                 <tr key={user.id}>
                   <td>{user.name}</td>
                   <td>{user.email}</td>
-                  <td>{user.membership.role}</td>
                   <td>
-                    <span className="status-badge">{user.status}</span>
+                    <span className={`role-badge ${getRoleBadge(user.membership.role)}`}>
+                      {ROLE_LABELS[user.membership.role] || user.membership.role}
+                    </span>
+                  </td>
+                  <td style={{ fontSize: 12 }}>
+                    {getPermissionSummary(user.membership.role)}
+                  </td>
+                  <td>
+                    <span className={`status-badge ${user.status === "ACTIVE" ? "entry" : ""}`}>
+                      {user.status === "ACTIVE" ? "Ativo" : user.status === "INVITED" ? "Convite" : "Inativo"}
+                    </span>
                   </td>
                   <td>
                     <Link href={`/users/${user.id}`} className="link-button">
@@ -75,4 +104,15 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
       </section>
     </div>
   );
+}
+
+function getPermissionSummary(role: string): string {
+  const map: Record<string, string> = {
+    ADMIN: "Todas",
+    SUPERVISOR: "Catalogo, Mov., Usuarios",
+    STORAGE_CLERK: "Movimentacoes",
+    BUYER: "Produtos, Fornecedores",
+    VIEWER: "Visualizacao apenas",
+  };
+  return map[role] || "-";
 }

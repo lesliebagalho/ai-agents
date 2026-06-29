@@ -1,8 +1,8 @@
-export type UserRole = "ADMIN" | "MANAGER" | "OPERATOR" | "VIEWER";
+export type UserRole = "ADMIN" | "SUPERVISOR" | "STORAGE_CLERK" | "BUYER" | "VIEWER";
 export type UserStatus = "ACTIVE" | "INVITED" | "INACTIVE";
 export type ProductStatus = "ACTIVE" | "INACTIVE";
 export type UnitType = "UNIT" | "BOX" | "KG" | "LITER" | "METER";
-export type MovementType = "ENTRY" | "EXIT" | "ADJUSTMENT";
+export type MovementType = "ENTRY" | "EXIT" | "ADJUSTMENT" | "SALE" | "INTERNAL_CONSUMPTION" | "LOSS" | "BREAKAGE" | "NEGATIVE_ADJUSTMENT";
 
 export type Company = {
   id: string;
@@ -70,6 +70,27 @@ export type Supplier = {
   updatedAt: string;
 };
 
+export type InventoryCount = {
+  id: string;
+  companyId: string;
+  name: string;
+  status: "OPEN" | "CLOSED";
+  createdAt: string;
+  closedAt?: string;
+  createdByUserId: string;
+};
+
+export type InventoryCountItem = {
+  id: string;
+  inventoryCountId: string;
+  productId: string;
+  expectedQuantity: number;
+  countedQuantity: number;
+  difference: number;
+  notes?: string;
+  countedAt?: string;
+};
+
 export type Product = {
   id: string;
   companyId: string;
@@ -88,6 +109,8 @@ export type Product = {
   weight?: number;
   dimensions?: string;
   imageUrl?: string;
+  expiryDate?: string;
+  lastMovementAt?: string;
   status: ProductStatus;
   createdAt: string;
   updatedAt: string;
@@ -133,6 +156,8 @@ export type DemoDatabase = {
   brands: Brand[];
   locations: Location[];
   suppliers: Supplier[];
+  inventoryCounts: InventoryCount[];
+  inventoryCountItems: InventoryCountItem[];
   products: Product[];
   inventoryBalances: InventoryBalance[];
   inventoryMovements: InventoryMovement[];

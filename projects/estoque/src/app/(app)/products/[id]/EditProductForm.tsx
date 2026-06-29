@@ -22,6 +22,7 @@ type ProductData = {
   weight?: number | null;
   dimensions?: string | null;
   imageUrl?: string | null;
+  expiryDate?: string | null;
   status: string;
 };
 
@@ -157,7 +158,7 @@ export default function EditProductForm({
       </div>
 
       <h3 style={{ margin: "16px 0 0", fontSize: 15, fontWeight: 700 }}>Fisico</h3>
-      <div className="field-row three">
+      <div className="field-row two">
         <div className="field">
           <label htmlFor="weight">Peso (kg)</label>
           <input id="weight" name="weight" type="number" min="0" step="0.001" defaultValue={product.weight ?? ""} placeholder="0,000" />
@@ -165,6 +166,15 @@ export default function EditProductForm({
         <div className="field">
           <label htmlFor="dimensions">Dimensoes</label>
           <input id="dimensions" name="dimensions" defaultValue={product.dimensions ?? ""} placeholder="Ex: 30x20x10 cm" />
+        </div>
+      </div>
+
+      <h3 style={{ margin: "16px 0 0", fontSize: 15, fontWeight: 700 }}>Validade</h3>
+      <div className="field-row two">
+        <div className="field">
+          <label htmlFor="expiryDate">Data de validade</label>
+          <input id="expiryDate" name="expiryDate" type="date" defaultValue={product.expiryDate ? product.expiryDate.slice(0, 10) : ""} />
+          <p className="muted" style={{ fontSize: 11, marginTop: 2 }}>Deixe em branco se nao tiver validade.</p>
         </div>
         <div className="field">
           <label htmlFor="imageUrl">URL da foto</label>

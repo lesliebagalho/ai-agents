@@ -3,8 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { canManageCatalog, canRegisterMovements, requireSessionContext } from "@/lib/auth/auth";
-import { deleteLocation, listBrandsByCompany, listProductsByCompany, registerInventoryMovement, upsertBrand, upsertCategory, upsertLocation, upsertProduct } from "@/lib/store/database";
-import { brandSchema, categorySchema, inventoryMovementSchema, locationSchema, productSchema } from "@/lib/validation";
+import { closeInventoryCount, deleteLocation, listBrandsByCompany, listProductsByCompany, registerInventoryMovement, startInventoryCount, updateInventoryCountItem, upsertBrand, upsertCategory, upsertLocation, upsertProduct, upsertSupplier } from "@/lib/store/database";
+import { brandSchema, categorySchema, inventoryMovementSchema, locationSchema, productSchema, supplierSchema } from "@/lib/validation";
 
 export async function saveCategoryAction(formData: FormData) {
   const session = await requireSessionContext();
@@ -62,6 +62,7 @@ export async function saveProductAction(formData: FormData) {
     weight: formData.get("weight"),
     dimensions: formData.get("dimensions"),
     imageUrl: formData.get("imageUrl"),
+    expiryDate: formData.get("expiryDate"),
     status: formData.get("status"),
   });
 
@@ -337,5 +338,161 @@ export async function deleteLocationAction(formData: FormData) {
   revalidatePath("/locations");
   revalidatePath("/products");
   redirect("/locations?success=Localizacao%20excluida.");
+}
+
+export async function saveSupplierAction(formData: FormData) {
+  const session = await requireSessionContext();
+  const supplierId = formData.get("id");
+  const isEditing = supplierId && String(supplierId).trim().length > 0;
+  const basePath = isEditing ? `/suppliers/${supplierId}` : "/suppliers/new";
+
+  if (!canManageCatalog(session.activeRole)) {
+    redirect(`${basePath}?error=Seu%20perfil%20nao%20pode%20alterar%20fornecedores.`);
+  }
+
+  const parsed = supplierSchema.safeParse({
+    id: supplierId,
+    name: formData.get("name"),
+    cnpj: formData.get("cnpj"),
+    contact: formData.get("contact"),
+    phone: formData.get("phone"),
+    email: formData.get("email"),
+    address: formData.get("address"),
+    status: formData.get("status"),
+  });
+
+  if (!parsed.success) {
+    redirect(`${basePath}?error=Preencha%20os%20campos%20obrigatorios%20do%20fornecedor.`);
+  }
+
+  try {
+    await upsertSupplier(session.activeCompany.id, parsed.data);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Nao foi possivel salvar o fornecedor.";
+    redirect(`${basePath}?error=${encodeURIComponent(message)}`);
+  }
+
+  revalidatePath("/suppliers");
+  revalidatePath("/products");
+  revalidatePath("/dashboard");
+  redirect("/suppliers?success=Fornecedor%20salvo%20com%20sucesso.");
+}
+
+const EXIT_TYPES = ["EXIT", "SALE", "INTERNAL_CONSUMPTION", "LOSS", "BREAKAGE", "NEGATIVE_ADJUSTMENT"] as const;
+
+export async function saveExitMovementAction(formData: FormData) {
+  const session = await requireSessionContext();
+  if (!canRegisterMovements(session.activeRole)) {
+    redirect("/exits/new?error=Seu%20perfil%20nao%20pode%20registrar%20saidas.");
+  }
+
+  const rawType = formData.get("type");
+  if (!EXIT_TYPES.includes(rawType as any)) {
+    redirect("/exits/new?error=Tipo%20de%20saida%20invalido.");
+  }
+
+  const parsed = inventoryMovementSchema.safeParse({
+    type: rawType,
+    productId: formData.get("productId"),
+    quantity: formData.get("quantity"),
+    reason: formData.get("reason"),
+    note: formData.get("note"),
+    referenceCode: formData.get("referenceCode"),
+  });
+
+  if (!parsed.success) {
+    redirect("/exits/new?error=Preencha%20os%20dados%20da%20saida%20corretamente.");
+  }
+
+  try {
+    await registerInventoryMovement(session.activeCompany.id, session.user.id, parsed.data);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Nao foi possivel registrar a saida.";
+    redirect(`/exits/new?error=${encodeURIComponent(message)}`);
+  }
+
+  revalidatePath("/exits");
+  revalidatePath("/exits/new");
+  revalidatePath("/inventory");
+  revalidatePath("/products");
+  revalidatePath("/dashboard");
+  redirect("/exits?success=Saida%20registrada%20com%20sucesso.");
+}
+
+export async function startInventoryCountAction(formData: FormData) {
+  const session = await requireSessionContext();
+  if (!canManageCatalog(session.activeRole)) {
+    redirect("/inventory-counts?error=Sem%20permissao%20para%20iniciar%20inventario.");
+  }
+
+  const name = formData.get("name");
+  if (!name || String(name).trim().length < 2) {
+    redirect("/inventory-counts/new?error=Informe%20um%20nome%20para%20o%20inventario.");
+  }
+
+  try {
+    await startInventoryCount(session.activeCompany.id, session.user.id, { name: String(name) });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Erro ao iniciar inventario.";
+    redirect(`/inventory-counts/new?error=${encodeURIComponent(message)}`);
+  }
+
+  revalidatePath("/inventory-counts");
+  redirect("/inventory-counts?success=Inventario%20iniciado%20com%20sucesso.");
+}
+
+export async function updateInventoryCountItemAction(formData: FormData) {
+  const session = await requireSessionContext();
+  if (!canManageCatalog(session.activeRole)) {
+    redirect("/inventory-counts?error=Sem%20permissao.");
+  }
+
+  const countId = formData.get("countId");
+  const itemId = formData.get("itemId");
+  const countedQuantity = formData.get("countedQuantity");
+  const notes = formData.get("notes");
+
+  if (!countId || !itemId || countedQuantity === null || countedQuantity === undefined) {
+    redirect(`/inventory-counts/${countId}?error=Dados%20incompletos.`);
+  }
+
+  const qty = Number(String(countedQuantity).replace(",", "."));
+  if (!Number.isFinite(qty) || qty < 0) {
+    redirect(`/inventory-counts/${countId}?error=Quantidade%20invalida.`);
+  }
+
+  try {
+    await updateInventoryCountItem(String(countId), String(itemId), qty, String(notes || ""));
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Erro ao atualizar contagem.";
+    redirect(`/inventory-counts/${countId}?error=${encodeURIComponent(message)}`);
+  }
+
+  revalidatePath(`/inventory-counts/${countId}`);
+  redirect(`/inventory-counts/${countId}?success=Item%20atualizado.`);
+}
+
+export async function closeInventoryCountAction(formData: FormData) {
+  const session = await requireSessionContext();
+  if (!canManageCatalog(session.activeRole)) {
+    redirect("/inventory-counts?error=Sem%20permissao.");
+  }
+
+  const countId = formData.get("countId");
+  if (!countId) {
+    redirect("/inventory-counts?error=ID%20invalido.");
+  }
+
+  try {
+    await closeInventoryCount(session.activeCompany.id, String(countId), session.user.id);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Erro ao fechar inventario.";
+    redirect(`/inventory-counts/${countId}?error=${encodeURIComponent(message)}`);
+  }
+
+  revalidatePath("/inventory-counts");
+  revalidatePath("/inventory");
+  revalidatePath("/dashboard");
+  redirect("/inventory-counts?success=Inventario%20fechado%20e%20ajustes%20aplicados.");
 }
 

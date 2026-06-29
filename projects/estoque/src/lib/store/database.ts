@@ -8,6 +8,8 @@ import type {
   Company,
   DemoDatabase,
   InventoryBalance,
+  InventoryCount,
+  InventoryCountItem,
   InventoryMovement,
   InventoryMovementWithRelations,
   Location,
@@ -40,6 +42,8 @@ function normalizeDatabase(raw: Partial<DemoDatabase>): DemoDatabase {
     brands: raw.brands ?? demoSeed.brands,
     locations: raw.locations ?? demoSeed.locations,
     suppliers: raw.suppliers ?? demoSeed.suppliers,
+    inventoryCounts: raw.inventoryCounts ?? demoSeed.inventoryCounts,
+    inventoryCountItems: raw.inventoryCountItems ?? demoSeed.inventoryCountItems,
     products: raw.products ?? demoSeed.products,
     inventoryBalances: raw.inventoryBalances ?? demoSeed.inventoryBalances,
     inventoryMovements: raw.inventoryMovements ?? demoSeed.inventoryMovements,
@@ -83,7 +87,7 @@ export async function getCompaniesForUser(userId: string) {
       const company = db.companies.find((item) => item.id === membership.companyId);
       return company ? { company, role: membership.role } : null;
     })
-    .filter((item): item is { company: Company; role: "ADMIN" | "MANAGER" | "OPERATOR" | "VIEWER" } => Boolean(item));
+    .filter((item): item is { company: Company; role: "ADMIN" | "SUPERVISOR" | "STORAGE_CLERK" | "BUYER" | "VIEWER" } => Boolean(item));
 }
 
 export async function listUsersByCompany(companyId: string): Promise<UserWithMembership[]> {
@@ -294,6 +298,535 @@ export async function deleteLocation(companyId: string, locationId: string) {
 
 // -------- End Locations --------
 
+// -------- Suppliers --------
+
+export async function listSuppliersByCompany(companyId: string) {
+  const db = await readDatabase();
+  return db.suppliers
+    .filter((s) => s.companyId === companyId)
+    .sort((a, b) => a.name.localeCompare(b.name));
+}
+
+export async function getSupplierById(companyId: string, supplierId?: string | null) {
+  if (!supplierId) {
+    return null;
+  }
+
+  const db = await readDatabase();
+  return db.suppliers.find((s) => s.id === supplierId && s.companyId === companyId) ?? null;
+}
+
+type SupplierInput = {
+  id?: string;
+  name: string;
+  cnpj?: string;
+  contact?: string;
+  phone?: string;
+  email?: string;
+  address?: string;
+  status: "ACTIVE" | "INACTIVE";
+};
+
+export async function upsertSupplier(companyId: string, input: SupplierInput) {
+  const db = await readDatabase();
+  const normalizedName = input.name.trim();
+
+  if (input.cnpj) {
+    const duplicateCnpj = db.suppliers.find(
+      (s) =>
+        s.companyId === companyId &&
+        s.cnpj === input.cnpj &&
+        s.id !== input.id,
+    );
+    if (duplicateCnpj) {
+      throw new Error("Ja existe um fornecedor com esse CNPJ na empresa ativa.");
+    }
+  }
+
+  if (input.id) {
+    db.suppliers = db.suppliers.map((s) =>
+      s.id === input.id && s.companyId === companyId
+        ? {
+            ...s,
+            name: normalizedName,
+            cnpj: input.cnpj || undefined,
+            contact: input.contact?.trim() || undefined,
+            phone: input.phone?.trim() || undefined,
+            email: input.email?.trim() || undefined,
+            address: input.address?.trim() || undefined,
+            status: input.status,
+            updatedAt: new Date().toISOString(),
+          }
+        : s,
+    );
+  } else {
+    const now = new Date().toISOString();
+    db.suppliers.push({
+      id: crypto.randomUUID(),
+      companyId,
+      name: normalizedName,
+      cnpj: input.cnpj || undefined,
+      contact: input.contact?.trim() || undefined,
+      phone: input.phone?.trim() || undefined,
+      email: input.email?.trim() || undefined,
+      address: input.address?.trim() || undefined,
+      status: input.status,
+      createdAt: now,
+      updatedAt: now,
+    });
+  }
+
+  await writeDatabase(db);
+}
+
+// -------- End Suppliers --------
+
+// -------- Inventory Count --------
+
+export async function listInventoryCountsByCompany(companyId: string) {
+  const db = await readDatabase();
+  return db.inventoryCounts
+    .filter((c) => c.companyId === companyId)
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+}
+
+export async function getInventoryCountById(companyId: string, countId: string) {
+  const db = await readDatabase();
+  return db.inventoryCounts.find((c) => c.id === countId && c.companyId === companyId) ?? null;
+}
+
+export async function getInventoryCountItems(countId: string) {
+  const db = await readDatabase();
+  return db.inventoryCountItems.filter((item) => item.inventoryCountId === countId);
+}
+
+type StartInventoryCountInput = {
+  name: string;
+};
+
+export async function startInventoryCount(companyId: string, userId: string, input: StartInventoryCountInput) {
+  const db = await readDatabase();
+  const now = new Date().toISOString();
+  const countId = crypto.randomUUID();
+
+  db.inventoryCounts.push({
+    id: countId,
+    companyId,
+    name: input.name.trim(),
+    status: "OPEN",
+    createdAt: now,
+    createdByUserId: userId,
+  });
+
+  // Cria itens para todos os produtos da empresa com saldo atual
+  const balances = db.inventoryBalances.filter((b) => b.companyId === companyId);
+  const products = db.products.filter((p) => p.companyId === companyId);
+
+  for (const product of products) {
+    const balance = balances.find((b) => b.productId === product.id);
+    const expected = balance?.currentQuantity ?? 0;
+    db.inventoryCountItems.push({
+      id: crypto.randomUUID(),
+      inventoryCountId: countId,
+      productId: product.id,
+      expectedQuantity: expected,
+      countedQuantity: expected,
+      difference: 0,
+    });
+  }
+
+  await writeDatabase(db);
+  return countId;
+}
+
+export async function updateInventoryCountItem(
+  countId: string,
+  itemId: string,
+  countedQuantity: number,
+  notes?: string,
+) {
+  const db = await readDatabase();
+  const item = db.inventoryCountItems.find((i) => i.id === itemId && i.inventoryCountId === countId);
+  if (!item) throw new Error("Item de contagem nao encontrado.");
+
+  item.countedQuantity = countedQuantity;
+  item.difference = countedQuantity - item.expectedQuantity;
+  item.notes = notes?.trim() || undefined;
+  item.countedAt = new Date().toISOString();
+
+  await writeDatabase(db);
+}
+
+export async function closeInventoryCount(companyId: string, countId: string, userId: string) {
+  const db = await readDatabase();
+  const count = db.inventoryCounts.find((c) => c.id === countId && c.companyId === companyId);
+  if (!count) throw new Error("Contagem nao encontrada.");
+  if (count.status === "CLOSED") throw new Error("Contagem ja esta fechada.");
+
+  count.status = "CLOSED";
+  count.closedAt = new Date().toISOString();
+
+  // Gera movimentacoes de ajuste para as divergencias
+  const items = db.inventoryCountItems.filter((i) => i.inventoryCountId === countId);
+  for (const item of items) {
+    if (item.difference === 0) continue;
+
+    const type = item.difference > 0 ? "ADJUSTMENT" : "NEGATIVE_ADJUSTMENT";
+    const absDiff = Math.abs(item.difference);
+
+    const balance = db.inventoryBalances.find(
+      (b) => b.companyId === companyId && b.productId === item.productId,
+    );
+    if (!balance) continue;
+
+    const previousQuantity = balance.currentQuantity;
+    const resultingQuantity = item.countedQuantity;
+
+    db.inventoryMovements.unshift({
+      id: crypto.randomUUID(),
+      companyId,
+      productId: item.productId,
+      performedByUserId: userId,
+      type,
+      quantity: absDiff,
+      previousQuantity,
+      resultingQuantity,
+      reason: `Ajuste por inventario: ${count.name}`,
+      note: item.notes || `Divergencia de ${item.difference > 0 ? "+" : ""}${item.difference}`,
+      referenceCode: countId,
+      createdAt: new Date().toISOString(),
+    });
+
+    balance.currentQuantity = resultingQuantity;
+    balance.updatedAt = new Date().toISOString();
+  }
+
+  await writeDatabase(db);
+}
+
+export async function getInventoryDivergences(companyId: string, countId: string) {
+  const db = await readDatabase();
+  const count = db.inventoryCounts.find((c) => c.id === countId && c.companyId === companyId);
+  if (!count) throw new Error("Contagem nao encontrada.");
+
+  const items = db.inventoryCountItems.filter((i) => i.inventoryCountId === countId);
+  const products = db.products.filter((p) => p.companyId === companyId);
+
+  return items
+    .map((item) => ({
+      ...item,
+      product: products.find((p) => p.id === item.productId)!,
+    }))
+    .filter((item) => item.difference !== 0)
+    .sort((a, b) => Math.abs(b.difference) - Math.abs(a.difference));
+}
+
+// -------- End Inventory Count --------
+
+// -------- Alerts --------
+
+type AlertsResult = {
+  lowStock: Array<{ product: Product; currentQuantity: number }>;
+  zeroStock: Array<{ product: Product }>;
+  expiringSoon: Array<{ product: Product; daysUntilExpiry: number }>;
+  noMovement: Array<{ product: Product; currentQuantity: number; lastMovementAt: string | null }>;
+};
+
+export async function getAlerts(companyId: string): Promise<AlertsResult> {
+  const db = await readDatabase();
+  const products = db.products.filter((p) => p.companyId === companyId && p.status === "ACTIVE");
+  const balances = db.inventoryBalances.filter((b) => b.companyId === companyId);
+  const movements = db.inventoryMovements.filter((m) => m.companyId === companyId);
+
+  const now = new Date();
+  const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+  const sixtyDaysAgo = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
+
+  const latestMovementPerProduct = new Map<string, string>();
+  for (const m of movements) {
+    const existing = latestMovementPerProduct.get(m.productId);
+    if (!existing || new Date(m.createdAt) > new Date(existing)) {
+      latestMovementPerProduct.set(m.productId, m.createdAt);
+    }
+  }
+
+  const lowStock: AlertsResult["lowStock"] = [];
+  const zeroStock: AlertsResult["zeroStock"] = [];
+  const expiringSoon: AlertsResult["expiringSoon"] = [];
+  const noMovement: AlertsResult["noMovement"] = [];
+
+  for (const product of products) {
+    const balance = balances.find((b) => b.productId === product.id);
+    const qty = balance?.currentQuantity ?? 0;
+
+    // Estoque baixo: abaixo ou igual ao minimo
+    if (typeof product.minimumStock === "number" && qty > 0 && qty <= product.minimumStock) {
+      lowStock.push({ product, currentQuantity: qty });
+    }
+
+    // Estoque zerado
+    if (qty === 0) {
+      zeroStock.push({ product });
+    }
+
+    // Proximo do vencimento (30 dias)
+    if (product.expiryDate) {
+      const expiry = new Date(product.expiryDate);
+      if (expiry > now && expiry <= thirtyDaysFromNow) {
+        const daysUntilExpiry = Math.ceil((expiry.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+        expiringSoon.push({ product, daysUntilExpiry });
+      }
+    }
+
+    // Sem movimentacao nos ultimos 60 dias
+    const lastMove = latestMovementPerProduct.get(product.id);
+    if (!lastMove || new Date(lastMove) < sixtyDaysAgo) {
+      noMovement.push({ product, currentQuantity: qty, lastMovementAt: lastMove || null });
+    }
+  }
+
+  lowStock.sort((a, b) => a.currentQuantity - b.currentQuantity);
+  zeroStock.sort((a, b) => a.product.name.localeCompare(b.product.name));
+  expiringSoon.sort((a, b) => a.daysUntilExpiry - b.daysUntilExpiry);
+  noMovement.sort((a, b) => {
+    const aDate = a.lastMovementAt || "";
+    const bDate = b.lastMovementAt || "";
+    return aDate.localeCompare(bDate);
+  });
+
+  return { lowStock, zeroStock, expiringSoon, noMovement };
+}
+
+// -------- End Alerts --------
+
+// -------- Validity --------
+
+type ValidityResult = {
+  expiringSoon: Array<{
+    product: Product;
+    currentQuantity: number;
+    daysUntilExpiry: number;
+    costPrice?: number;
+    totalValue?: number;
+  }>;
+  expired: Array<{
+    product: Product;
+    currentQuantity: number;
+    daysOverdue: number;
+    costPrice?: number;
+    totalValue?: number;
+  }>;
+};
+
+export async function getValidityAlerts(companyId: string): Promise<ValidityResult> {
+  const db = await readDatabase();
+  const products = db.products.filter((p) => p.companyId === companyId && p.status === "ACTIVE" && p.expiryDate);
+  const balances = db.inventoryBalances.filter((b) => b.companyId === companyId);
+
+  const now = new Date();
+  const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+
+  const expiringSoon: ValidityResult["expiringSoon"] = [];
+  const expired: ValidityResult["expired"] = [];
+
+  for (const product of products) {
+    const balance = balances.find((b) => b.productId === product.id);
+    const qty = balance?.currentQuantity ?? 0;
+
+    const expiryDate = new Date(product.expiryDate!);
+
+    // Vencido
+    if (expiryDate < now) {
+      const daysOverdue = Math.ceil((now.getTime() - expiryDate.getTime()) / (1000 * 60 * 60 * 24));
+      expired.push({
+        product,
+        currentQuantity: qty,
+        daysOverdue,
+        costPrice: product.costPrice ?? undefined,
+        totalValue: product.costPrice ? product.costPrice * qty : undefined,
+      });
+      continue;
+    }
+
+    // A vencer nos proximos 30 dias
+    if (expiryDate <= thirtyDaysFromNow) {
+      const daysUntilExpiry = Math.ceil((expiryDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+      expiringSoon.push({
+        product,
+        currentQuantity: qty,
+        daysUntilExpiry,
+        costPrice: product.costPrice ?? undefined,
+        totalValue: product.costPrice ? product.costPrice * qty : undefined,
+      });
+    }
+  }
+
+  expired.sort((a, b) => a.daysOverdue - b.daysOverdue);
+  expiringSoon.sort((a, b) => a.daysUntilExpiry - b.daysUntilExpiry);
+
+  return { expiringSoon, expired };
+}
+
+export async function getValiditySummaryByMonth(companyId: string) {
+  const db = await readDatabase();
+  const products = db.products.filter((p) => p.companyId === companyId && p.status === "ACTIVE" && p.expiryDate);
+  const balances = db.inventoryBalances.filter((b) => b.companyId === companyId);
+
+  const now = new Date();
+  const summary = new Map<string, { count: number; quantity: number; totalValue: number }>();
+
+  for (const product of products) {
+    const balance = balances.find((b) => b.productId === product.id);
+    const qty = balance?.currentQuantity ?? 0;
+
+    const expiry = new Date(product.expiryDate!);
+    const monthKey = `${expiry.getFullYear()}-${String(expiry.getMonth() + 1).padStart(2, "0")}`;
+
+    const existing = summary.get(monthKey) || { count: 0, quantity: 0, totalValue: 0 };
+    existing.count++;
+    existing.quantity += qty;
+    if (product.costPrice) existing.totalValue += product.costPrice * qty;
+    summary.set(monthKey, existing);
+  }
+
+  return Array.from(summary.entries())
+    .map(([month, data]) => ({ month, ...data }))
+    .sort((a, b) => a.month.localeCompare(b.month));
+}
+
+// -------- End Validity --------
+
+// -------- Reports --------
+
+type ReportStockItem = {
+  product: Product;
+  currentQuantity: number;
+  costPrice: number | undefined;
+  totalValue: number;
+  categoryName: string;
+  brandName: string;
+};
+
+export async function getCurrentStockReport(companyId: string): Promise<ReportStockItem[]> {
+  const db = await readDatabase();
+  const products = db.products.filter((p) => p.companyId === companyId && p.status === "ACTIVE");
+  const balances = db.inventoryBalances.filter((b) => b.companyId === companyId);
+  const categories = db.categories.filter((c) => c.companyId === companyId);
+  const brands = db.brands.filter((b) => b.companyId === companyId);
+  const categoryMap = Object.fromEntries(categories.map((c) => [c.id, c.name]));
+  const brandMap = Object.fromEntries(brands.map((b) => [b.id, b.name]));
+
+  return products
+    .map((product) => {
+      const balance = balances.find((b) => b.productId === product.id);
+      const qty = balance?.currentQuantity ?? 0;
+      return {
+        product,
+        currentQuantity: qty,
+        costPrice: product.costPrice ?? undefined,
+        totalValue: product.costPrice ? product.costPrice * qty : 0,
+        categoryName: product.categoryId ? categoryMap[product.categoryId] || "-" : "-",
+        brandName: product.brandId ? brandMap[product.brandId] || "-" : "-",
+      };
+    })
+    .sort((a, b) => b.totalValue - a.totalValue);
+}
+
+export async function getAbcCurve(companyId: string) {
+  const stock = await getCurrentStockReport(companyId);
+  const totalValue = stock.reduce((acc, item) => acc + item.totalValue, 0);
+
+  let cumulative = 0;
+  return stock.map((item) => {
+    cumulative += item.totalValue;
+    const pct = totalValue > 0 ? (item.totalValue / totalValue) * 100 : 0;
+    const cumulativePct = totalValue > 0 ? (cumulative / totalValue) * 100 : 0;
+    let classification: "A" | "B" | "C";
+    if (cumulativePct <= 80) classification = "A";
+    else if (cumulativePct <= 95) classification = "B";
+    else classification = "C";
+
+    return { ...item, pct, cumulativePct, classification, totalValue };
+  });
+}
+
+export async function getInventoryTurnover(companyId: string) {
+  const db = await readDatabase();
+  const products = db.products.filter((p) => p.companyId === companyId && p.status === "ACTIVE");
+  const balances = db.inventoryBalances.filter((b) => b.companyId === companyId);
+  const movements = db.inventoryMovements.filter((m) => m.companyId === companyId);
+
+  const now = new Date();
+  const sixMonthsAgo = new Date(now.getTime() - 180 * 24 * 60 * 60 * 1000);
+
+  return products.map((product) => {
+    const balance = balances.find((b) => b.productId === product.id);
+    const qty = balance?.currentQuantity ?? 0;
+
+    // Saidas nos ultimos 6 meses
+    const exits = movements.filter(
+      (m) => m.productId === product.id && m.createdAt >= sixMonthsAgo.toISOString() && ["EXIT", "SALE", "INTERNAL_CONSUMPTION", "LOSS", "BREAKAGE", "NEGATIVE_ADJUSTMENT"].includes(m.type),
+    );
+    const totalExits = exits.reduce((acc, m) => acc + m.quantity, 0);
+
+    // Giro = total saidas / saldo medio (saldo atual como aproximacao)
+    const turnover = qty > 0 ? totalExits / qty : 0;
+
+    // Dias para zerar = saldo / saidas diarias
+    const dailyExitRate = totalExits / 180;
+    const daysToZero = dailyExitRate > 0 ? qty / dailyExitRate : Infinity;
+
+    return { product, currentQuantity: qty, totalExits, turnover, daysToZero };
+  });
+}
+
+export async function getStagnantProducts(companyId: string, daysThreshold = 60) {
+  const db = await readDatabase();
+  const products = db.products.filter((p) => p.companyId === companyId && p.status === "ACTIVE");
+  const balances = db.inventoryBalances.filter((b) => b.companyId === companyId);
+  const movements = db.inventoryMovements.filter((m) => m.companyId === companyId);
+
+  const threshold = new Date(Date.now() - daysThreshold * 24 * 60 * 60 * 1000);
+
+  const latestMovementPerProduct = new Map<string, string>();
+  for (const m of movements) {
+    const existing = latestMovementPerProduct.get(m.productId);
+    if (!existing || new Date(m.createdAt) > new Date(existing)) {
+      latestMovementPerProduct.set(m.productId, m.createdAt);
+    }
+  }
+
+  return products
+    .map((product) => {
+      const balance = balances.find((b) => b.productId === product.id);
+      const qty = balance?.currentQuantity ?? 0;
+      const lastMoveAt = latestMovementPerProduct.get(product.id) || null;
+      const daysSinceLastMove = lastMoveAt
+        ? Math.floor((Date.now() - new Date(lastMoveAt).getTime()) / (1000 * 60 * 60 * 24))
+        : Infinity;
+
+      return { product, currentQuantity: qty, lastMovementAt: lastMoveAt, daysSinceLastMove };
+    })
+    .filter((item) => item.daysSinceLastMove >= daysThreshold)
+    .sort((a, b) => b.daysSinceLastMove - a.daysSinceLastMove);
+}
+
+export async function getFinancialSummary(companyId: string) {
+  const stock = await getCurrentStockReport(companyId);
+  const products = await listProductsByCompany(companyId);
+  const activeProducts = products.filter((p) => p.status === "ACTIVE");
+
+  const totalStockValue = stock.reduce((acc, item) => acc + item.totalValue, 0);
+  const productsWithCost = activeProducts.filter((p) => p.costPrice);
+  const avgCostPrice = productsWithCost.length > 0
+    ? productsWithCost.reduce((acc, p) => acc + (p.costPrice ?? 0), 0) / productsWithCost.length
+    : 0;
+
+  return { totalStockValue, totalProducts: stock.length, productsWithCost: productsWithCost.length, avgCostPrice };
+}
+
+// -------- End Reports --------
+
 export async function upsertCategory(companyId: string, input: CategoryInput) {
   const db = await readDatabase();
   const normalizedName = input.name.trim();
@@ -346,7 +879,7 @@ type UserInput = {
   name: string;
   email: string;
   password?: string;
-  role: "ADMIN" | "MANAGER" | "OPERATOR" | "VIEWER";
+  role: "ADMIN" | "SUPERVISOR" | "STORAGE_CLERK" | "BUYER" | "VIEWER";
   status: "ACTIVE" | "INVITED" | "INACTIVE";
 };
 
@@ -479,6 +1012,7 @@ type ProductInput = {
   weight?: number;
   dimensions?: string;
   imageUrl?: string;
+  expiryDate?: string;
   status: Product["status"];
 };
 
@@ -529,6 +1063,7 @@ export async function upsertProduct(companyId: string, input: ProductInput) {
             weight: input.weight,
             dimensions: input.dimensions?.trim() || undefined,
             imageUrl: input.imageUrl?.trim() || undefined,
+            expiryDate: input.expiryDate || undefined,
             status: input.status,
             updatedAt: new Date().toISOString(),
           }
@@ -555,6 +1090,7 @@ export async function upsertProduct(companyId: string, input: ProductInput) {
       weight: input.weight,
       dimensions: input.dimensions?.trim() || undefined,
       imageUrl: input.imageUrl?.trim() || undefined,
+      expiryDate: input.expiryDate || undefined,
       status: input.status,
       createdAt: now,
       updatedAt: now,

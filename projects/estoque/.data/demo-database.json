@@ -41,7 +41,7 @@
       "id": "uc-3",
       "userId": "user-bruno",
       "companyId": "company-beta",
-      "role": "OPERATOR",
+      "role": "STORAGE_CLERK",
       "isActive": true
     }
   ],
@@ -51,16 +51,16 @@
       "companyId": "company-acme",
       "name": "Insumos",
       "description": "Materiais de consumo recorrente.",
-      "createdAt": "2026-06-29T16:43:48.556Z",
-      "updatedAt": "2026-06-29T16:43:48.556Z"
+      "createdAt": "2026-06-29T20:14:47.470Z",
+      "updatedAt": "2026-06-29T20:14:47.470Z"
     },
     {
       "id": "category-beta-1",
       "companyId": "company-beta",
       "name": "Revenda",
       "description": "Produtos preparados para revenda.",
-      "createdAt": "2026-06-29T16:43:48.556Z",
-      "updatedAt": "2026-06-29T16:43:48.556Z"
+      "createdAt": "2026-06-29T20:14:47.470Z",
+      "updatedAt": "2026-06-29T20:14:47.470Z"
     }
   ],
   "brands": [
@@ -68,22 +68,22 @@
       "id": "brand-acme-1",
       "companyId": "company-acme",
       "name": "Nestle",
-      "createdAt": "2026-06-29T16:43:48.556Z",
-      "updatedAt": "2026-06-29T16:43:48.556Z"
+      "createdAt": "2026-06-29T20:14:47.470Z",
+      "updatedAt": "2026-06-29T20:14:47.470Z"
     },
     {
       "id": "brand-acme-2",
       "companyId": "company-acme",
       "name": "Coca-Cola",
-      "createdAt": "2026-06-29T16:43:48.556Z",
-      "updatedAt": "2026-06-29T16:43:48.556Z"
+      "createdAt": "2026-06-29T20:14:47.470Z",
+      "updatedAt": "2026-06-29T20:14:47.470Z"
     },
     {
       "id": "brand-beta-1",
       "companyId": "company-beta",
       "name": "3M",
-      "createdAt": "2026-06-29T16:43:48.556Z",
-      "updatedAt": "2026-06-29T16:43:48.556Z"
+      "createdAt": "2026-06-29T20:14:47.470Z",
+      "updatedAt": "2026-06-29T20:14:47.470Z"
     }
   ],
   "locations": [
@@ -93,8 +93,8 @@
       "name": "Galpao A",
       "level": 0,
       "sortOrder": 1,
-      "createdAt": "2026-06-29T16:43:48.556Z",
-      "updatedAt": "2026-06-29T16:43:48.556Z"
+      "createdAt": "2026-06-29T20:14:47.470Z",
+      "updatedAt": "2026-06-29T20:14:47.470Z"
     },
     {
       "id": "loc-acme-2",
@@ -103,8 +103,8 @@
       "name": "Rua 01",
       "level": 1,
       "sortOrder": 1,
-      "createdAt": "2026-06-29T16:43:48.556Z",
-      "updatedAt": "2026-06-29T16:43:48.556Z"
+      "createdAt": "2026-06-29T20:14:47.470Z",
+      "updatedAt": "2026-06-29T20:14:47.470Z"
     },
     {
       "id": "loc-acme-3",
@@ -113,8 +113,8 @@
       "name": "Prateleira 02",
       "level": 2,
       "sortOrder": 1,
-      "createdAt": "2026-06-29T16:43:48.556Z",
-      "updatedAt": "2026-06-29T16:43:48.556Z"
+      "createdAt": "2026-06-29T20:14:47.470Z",
+      "updatedAt": "2026-06-29T20:14:47.470Z"
     },
     {
       "id": "loc-acme-4",
@@ -123,8 +123,8 @@
       "name": "Nivel 03",
       "level": 3,
       "sortOrder": 1,
-      "createdAt": "2026-06-29T16:43:48.556Z",
-      "updatedAt": "2026-06-29T16:43:48.556Z"
+      "createdAt": "2026-06-29T20:14:47.470Z",
+      "updatedAt": "2026-06-29T20:14:47.470Z"
     },
     {
       "id": "loc-beta-1",
@@ -132,8 +132,8 @@
       "name": "Deposito Central",
       "level": 0,
       "sortOrder": 1,
-      "createdAt": "2026-06-29T16:43:48.556Z",
-      "updatedAt": "2026-06-29T16:43:48.556Z"
+      "createdAt": "2026-06-29T20:14:47.470Z",
+      "updatedAt": "2026-06-29T20:14:47.470Z"
     },
     {
       "id": "loc-beta-2",
@@ -142,10 +142,53 @@
       "name": "Corredor B",
       "level": 1,
       "sortOrder": 1,
-      "createdAt": "2026-06-29T16:43:48.556Z",
-      "updatedAt": "2026-06-29T16:43:48.556Z"
+      "createdAt": "2026-06-29T20:14:47.470Z",
+      "updatedAt": "2026-06-29T20:14:47.470Z"
     }
   ],
+  "suppliers": [
+    {
+      "id": "supplier-acme-1",
+      "companyId": "company-acme",
+      "name": "Distribuidora de Papeis Ltda",
+      "cnpj": "11222333000181",
+      "contact": "Carlos",
+      "phone": "(11) 99999-0001",
+      "email": "carlos@distpapeis.com.br",
+      "address": "Rua dos Papéis, 100, SP",
+      "status": "ACTIVE",
+      "createdAt": "2026-06-29T20:14:47.470Z",
+      "updatedAt": "2026-06-29T20:14:47.470Z"
+    },
+    {
+      "id": "supplier-acme-2",
+      "companyId": "company-acme",
+      "name": "Embalagens Premium S.A.",
+      "cnpj": "44555666000199",
+      "contact": "Marina",
+      "phone": "(11) 98888-0002",
+      "email": "marina@embpremium.com",
+      "address": "Av das Embalagens, 200, SP",
+      "status": "ACTIVE",
+      "createdAt": "2026-06-29T20:14:47.470Z",
+      "updatedAt": "2026-06-29T20:14:47.470Z"
+    },
+    {
+      "id": "supplier-beta-1",
+      "companyId": "company-beta",
+      "name": "Caixas e Cia Ltda",
+      "cnpj": "77888999000111",
+      "contact": "Roberto",
+      "phone": "(21) 97777-0003",
+      "email": "roberto@caixasecia.com",
+      "address": "Rua das Caixas, 50, RJ",
+      "status": "ACTIVE",
+      "createdAt": "2026-06-29T20:14:47.470Z",
+      "updatedAt": "2026-06-29T20:14:47.470Z"
+    }
+  ],
+  "inventoryCounts": [],
+  "inventoryCountItems": [],
   "products": [
     {
       "id": "product-acme-1",
@@ -157,9 +200,48 @@
       "unit": "BOX",
       "minimumStock": 5,
       "status": "ACTIVE",
-      "createdAt": "2026-06-29T16:43:48.556Z",
-      "updatedAt": "2026-06-29T17:00:06.306Z",
-      "locationId": "loc-acme-4"
+      "createdAt": "2026-06-29T20:14:47.470Z",
+      "updatedAt": "2026-06-29T20:14:47.470Z"
+    },
+    {
+      "id": "product-acme-2",
+      "companyId": "company-acme",
+      "categoryId": "category-acme-1",
+      "name": "Toner HP 85A",
+      "sku": "TON-HP-85A",
+      "costPrice": 189.9,
+      "unit": "UNIT",
+      "minimumStock": 3,
+      "expiryDate": "2026-07-24T20:14:47.470Z",
+      "status": "ACTIVE",
+      "createdAt": "2026-06-29T20:14:47.470Z",
+      "updatedAt": "2026-06-29T20:14:47.470Z"
+    },
+    {
+      "id": "product-acme-3",
+      "companyId": "company-acme",
+      "categoryId": "category-acme-1",
+      "name": "Caneta Azul",
+      "sku": "CAN-AZ-001",
+      "costPrice": 1.5,
+      "unit": "UNIT",
+      "minimumStock": 50,
+      "status": "ACTIVE",
+      "createdAt": "2026-06-29T20:14:47.470Z",
+      "updatedAt": "2026-06-29T20:14:47.470Z"
+    },
+    {
+      "id": "product-acme-4",
+      "companyId": "company-acme",
+      "categoryId": "category-acme-1",
+      "name": "Lapis Preto",
+      "sku": "LAP-PR-001",
+      "costPrice": 0.8,
+      "unit": "UNIT",
+      "minimumStock": 30,
+      "status": "ACTIVE",
+      "createdAt": "2025-12-31T20:14:47.470Z",
+      "updatedAt": "2025-12-31T20:14:47.470Z"
     },
     {
       "id": "product-beta-1",
@@ -171,8 +253,8 @@
       "unit": "UNIT",
       "minimumStock": 10,
       "status": "ACTIVE",
-      "createdAt": "2026-06-29T16:43:48.556Z",
-      "updatedAt": "2026-06-29T16:43:48.556Z"
+      "createdAt": "2026-06-29T20:14:47.470Z",
+      "updatedAt": "2026-06-29T20:14:47.470Z"
     }
   ],
   "inventoryBalances": [
@@ -181,14 +263,35 @@
       "companyId": "company-acme",
       "productId": "product-acme-1",
       "currentQuantity": 12,
-      "updatedAt": "2026-06-29T16:43:48.556Z"
+      "updatedAt": "2026-06-29T20:14:47.470Z"
+    },
+    {
+      "id": "balance-acme-2",
+      "companyId": "company-acme",
+      "productId": "product-acme-2",
+      "currentQuantity": 2,
+      "updatedAt": "2026-06-29T20:14:47.470Z"
+    },
+    {
+      "id": "balance-acme-3",
+      "companyId": "company-acme",
+      "productId": "product-acme-3",
+      "currentQuantity": 0,
+      "updatedAt": "2026-06-29T20:14:47.470Z"
+    },
+    {
+      "id": "balance-acme-4",
+      "companyId": "company-acme",
+      "productId": "product-acme-4",
+      "currentQuantity": 10,
+      "updatedAt": "2025-12-31T20:14:47.470Z"
     },
     {
       "id": "balance-beta-1",
       "companyId": "company-beta",
       "productId": "product-beta-1",
       "currentQuantity": 24,
-      "updatedAt": "2026-06-29T16:43:48.556Z"
+      "updatedAt": "2026-06-29T20:14:47.470Z"
     }
   ],
   "inventoryMovements": [
@@ -202,7 +305,7 @@
       "previousQuantity": 0,
       "resultingQuantity": 12,
       "note": "Carga inicial para validacao.",
-      "createdAt": "2026-06-29T16:43:48.556Z"
+      "createdAt": "2026-06-29T20:14:47.470Z"
     },
     {
       "id": "move-beta-1",
@@ -214,7 +317,7 @@
       "previousQuantity": 0,
       "resultingQuantity": 24,
       "note": "Carga inicial para validacao.",
-      "createdAt": "2026-06-29T16:43:48.556Z"
+      "createdAt": "2026-06-29T20:14:47.470Z"
     }
   ]
 }

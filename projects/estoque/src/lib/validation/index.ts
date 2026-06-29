@@ -172,6 +172,11 @@ export const productSchema = z.object({
     .trim()
     .nullish()
     .transform((value) => value || undefined),
+  expiryDate: z
+    .string()
+    .trim()
+    .nullish()
+    .transform((value) => value || undefined),
   weight: z
     .union([z.string(), z.number(), z.null(), z.undefined()])
     .transform((value) => {
@@ -198,7 +203,7 @@ export const productSchema = z.object({
 
 export const inventoryMovementSchema = z
   .object({
-    type: z.enum(["ENTRY", "EXIT", "ADJUSTMENT"]),
+    type: z.enum(["ENTRY", "EXIT", "ADJUSTMENT", "SALE", "INTERNAL_CONSUMPTION", "LOSS", "BREAKAGE", "NEGATIVE_ADJUSTMENT"]),
     productId: z.string().trim().min(1, "Selecione um produto."),
     quantity: z
       .union([z.string(), z.number()])
@@ -254,6 +259,6 @@ export const userSchema = z.object({
     .trim()
     .nullish()
     .transform((value) => value || undefined),
-  role: z.enum(["ADMIN", "MANAGER", "OPERATOR", "VIEWER"]),
+  role: z.enum(["ADMIN", "SUPERVISOR", "STORAGE_CLERK", "BUYER", "VIEWER"]),
   status: z.enum(["ACTIVE", "INVITED", "INACTIVE"]),
 });

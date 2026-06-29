@@ -27,10 +27,52 @@ export default async function AppLayout({ children }: AppLayoutProps) {
     {
       href: "/inventory",
       label: "Movimentacoes",
+      visible: canRegisterMovements(session.activeRole),
+      children: [
+        { href: "/inventory", label: "Historico Geral", visible: true },
+        { href: "/inventory/new", label: "Nova", visible: canRegisterMovements(session.activeRole) },
+      ],
+    },
+    {
+      href: "/exits",
+      label: "Saidas",
+      visible: canRegisterMovements(session.activeRole),
+      children: [
+        { href: "/exits", label: "Historico", visible: true },
+        { href: "/exits/new", label: "Nova saida", visible: canRegisterMovements(session.activeRole) },
+      ],
+    },
+    {
+      href: "/inventory-counts",
+      label: "Inventario",
+      visible: canManageCatalog(session.activeRole),
+      children: [
+        { href: "/inventory-counts", label: "Contagens", visible: true },
+        { href: "/inventory-counts/new", label: "Novo inventario", visible: canManageCatalog(session.activeRole) },
+      ],
+    },
+    {
+      href: "/alerts",
+      label: "Alertas",
       visible: true,
       children: [
-        { href: "/inventory", label: "Historico", visible: true },
-        { href: "/inventory/new", label: "Nova", visible: canRegisterMovements(session.activeRole) },
+        { href: "/alerts", label: "Visao geral", visible: true },
+      ],
+    },
+    {
+      href: "/validity",
+      label: "Validade",
+      visible: true,
+      children: [
+        { href: "/validity", label: "Dashboard", visible: true },
+      ],
+    },
+    {
+      href: "/reports",
+      label: "Relatorios",
+      visible: true,
+      children: [
+        { href: "/reports", label: "Dashboard", visible: true },
       ],
     },
     {
@@ -61,12 +103,22 @@ export default async function AppLayout({ children }: AppLayoutProps) {
       ],
     },
     {
+      href: "/suppliers",
+      label: "Fornecedores",
+      visible: canManageCatalog(session.activeRole),
+      children: [
+        { href: "/suppliers", label: "Listagem", visible: true },
+        { href: "/suppliers/new", label: "Novo", visible: canManageCatalog(session.activeRole) },
+      ],
+    },
+    {
       href: "/users",
       label: "Usuarios",
       visible: canManageUsers(session.activeRole),
       children: [
         { href: "/users", label: "Listagem", visible: true },
         { href: "/users/new", label: "Novo", visible: canManageUsers(session.activeRole) },
+        { href: "/users/profiles", label: "Perfis", visible: true },
       ],
     },
   ];

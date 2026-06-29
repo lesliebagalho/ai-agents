@@ -1,8 +1,9 @@
+
+import Link from "next/link";
 import { canManageUsers, requireSessionContext } from "@/lib/auth/auth";
 import { saveUserAction } from "@/features/users/actions";
 import { getUserMembershipById } from "@/lib/store/database";
 import { notFound } from "next/navigation";
-import Link from "next/link";
 
 type EditUserPageProps = {
   params: Promise<{ id: string }>;
@@ -69,11 +70,15 @@ export default async function EditUserPage({ params, searchParams }: EditUserPag
             <div className="field">
               <label htmlFor="role">Perfil *</label>
               <select id="role" name="role" defaultValue={editingUser.membership.role}>
-                <option value="ADMIN">ADMIN</option>
-                <option value="MANAGER">MANAGER</option>
-                <option value="OPERATOR">OPERATOR</option>
-                <option value="VIEWER">VIEWER</option>
+                <option value="ADMIN">Administrador</option>
+                <option value="SUPERVISOR">Supervisor</option>
+                <option value="STORAGE_CLERK">Almoxarife</option>
+                <option value="BUYER">Comprador</option>
+                <option value="VIEWER">Consulta</option>
               </select>
+              <p className="muted" style={{ fontSize: 12, marginTop: 2 }}>
+                <Link href="/users/profiles" className="link-button" style={{ fontSize: 12 }}>Ver descricao dos perfis</Link>
+              </p>
             </div>
 
             <div className="field">
