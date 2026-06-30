@@ -8,6 +8,8 @@ import {
   getFinancialSummary,
   listInventoryMovementsByCompany,
 } from "@/lib/store/database";
+import { generateReplenishmentSuggestions } from "@/services/replenishment";
+import ReplenishmentPanel from "@/components/ReplenishmentPanel";
 
 type ReportsPageProps = {
   searchParams?: Promise<{
@@ -16,6 +18,7 @@ type ReportsPageProps = {
 };
 
 const TABS = [
+  { key: "replenishment", label: "Reposicao (IA)" },
   { key: "current-stock", label: "Estoque Atual" },
   { key: "abc-curve", label: "Curva ABC" },
   { key: "turnover", label: "Giro de Estoque" },
@@ -50,6 +53,9 @@ export default async function ReportsPage({ searchParams }: ReportsPageProps) {
           ))}
         </div>
 
+        {/* ============== Reposicao (IA) ============== */}
+        {activeTab === "replenishment" && <ReplenishmentTab companyId={session.activeCompany.id} />}
+
         {/* ============== Estoque Atual ============== */}
         {activeTab === "current-stock" && <CurrentStockTab companyId={session.activeCompany.id} />}
 
@@ -69,6 +75,26 @@ export default async function ReportsPage({ searchParams }: ReportsPageProps) {
         {activeTab === "financial" && <FinancialTab companyId={session.activeCompany.id} />}
       </section>
     </div>
+  );
+}
+
+// ============================================================
+// TAB: Reposicao (IA)
+// ============================================================
+async function ReplenishmentTab({ companyId }: { companyId: string }) {
+  const suggestions = await generateReplenishmentSuggestions(companyId, {
+    forecastDays: 30,
+    safetyDays: 7,
+    historyDays: 180,
+  });
+
+  return (
+    <ReplenishmentPanel
+      initialSuggestions={suggestions}
+      companyId={companyId}
+      forecastDays={30}
+      safetyDays={7}
+    />
   );
 }
 
