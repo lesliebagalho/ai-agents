@@ -1,7 +1,14 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { canManageCatalog, requireSessionContext } from "@/lib/auth/auth";
-import { getProductById, listBrandsByCompany, listCategoriesByCompany, listLocationsByCompany } from "@/lib/store/database";
+import {
+  getProductById,
+  listBrandsByCompany,
+  listCategoriesByCompany,
+  listLocationsByCompany,
+  listBatchesByProduct,
+  listSerialsByProduct,
+} from "@/lib/store/database";
 import EditProductForm from "./EditProductForm";
 
 type EditProductPageProps = {
@@ -20,6 +27,14 @@ export default async function EditProductPage({ params, searchParams }: EditProd
     listLocationsByCompany(session.activeCompany.id),
     getProductById(session.activeCompany.id, id),
   ]);
+
+  // Carrega lotes e seriais se o produto tiver rastreabilidade
+  const [batches, serials] = product
+    ? await Promise.all([
+        product.trackBatch ? listBatchesByProduct(session.activeCompany.id, product.id) : [],
+        product.trackSerial ? listSerialsByProduct(session.activeCompany.id, product.id) : [],
+      ])
+    : [[], []];
 
   const brandMap = Object.fromEntries(brands.map((b) => [b.id, b.name]));
 
@@ -54,6 +69,89 @@ export default async function EditProductPage({ params, searchParams }: EditProd
 
         {!canEdit && <ProductReadOnly product={product} brandMap={brandMap} locations={locations} />}
       </section>
+
+      {/* Lotes */}
+      {product.trackBatch && batches.length > 0 && (
+        <section className="surface-card section-card">
+          <div className="section-header">
+            <h3>Lotes</h3>
+            <Link href={`/products/${product.id}/batches`} className="link-button" style={{ fontSize: 13 }}>
+              Gerenciar lotes
+            </Link>
+          </div>
+          <div className="table-wrap">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Codigo do lote</th>
+                  <th>Quantidade</th>
+                  <th>Fabricacao</th>
+                  <th>Validade</th>
+                  <th>Observacoes</th>
+                </tr>
+              </thead>
+              <tbody>
+                {batches.map((batch) => (
+                  <tr key={batch.id}>
+                    <td style={{ fontWeight: 600 }}>{batch.batchCode}</td>
+                    <td>{batch.quantity}</td>
+                    <td className="muted">{batch.manufacturingDate ? new Date(batch.manufacturingDate).toLocaleDateString("pt-BR") : "-"}</td>
+                    <td className="muted">
+                      {batch.expiryDate ? (
+                        <span className={new Date(batch.expiryDate) < new Date() ? "text-danger" : ""}>
+                          {new Date(batch.expiryDate).toLocaleDateString("pt-BR")}
+                        </span>
+                      ) : "-"}
+                    </td>
+                    <td className="muted">{batch.notes || "-"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
+
+      {/* Numeros de serie */}
+      {product.trackSerial && serials.length > 0 && (
+        <section className="surface-card section-card">
+          <div className="section-header">
+            <h3>Numeros de serie</h3>
+            <Link href={`/products/${product.id}/serials`} className="link-button" style={{ fontSize: 13 }}>
+              Gerenciar seriais
+            </Link>
+          </div>
+          <div className="table-wrap">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Serial</th>
+                  <th>Status</th>
+                  <th>Lote</th>
+                  <th>Observacoes</th>
+                </tr>
+              </thead>
+              <tbody>
+                {serials.map((serial) => {
+                  const batch = batches.find((b) => b.id === serial.batchId);
+                  return (
+                    <tr key={serial.id}>
+                      <td style={{ fontWeight: 600, fontFamily: "monospace" }}>{serial.serialNumber}</td>
+                      <td>
+                        <span className={`status-badge ${serial.status === "IN_STOCK" ? "entry" : serial.status === "SOLD" ? "exit" : ""}`}>
+                          {serial.status === "IN_STOCK" ? "Em estoque" : serial.status === "SOLD" ? "Vendido" : serial.status === "RETURNED" ? "Devolvido" : "Perdido"}
+                        </span>
+                      </td>
+                      <td className="muted">{batch?.batchCode || "-"}</td>
+                      <td className="muted">{serial.notes || "-"}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
     </div>
   );
 }

@@ -76,6 +76,22 @@ export default async function AppLayout({ children }: AppLayoutProps) {
       ],
     },
     {
+      href: "/settings",
+      label: "Configuracoes",
+      visible: true,
+      children: [
+        { href: "/settings", label: "Geral", visible: true },
+      ],
+    },
+    {
+      href: "/audit",
+      label: "Auditoria",
+      visible: true,
+      children: [
+        { href: "/audit", label: "Registros", visible: true },
+      ],
+    },
+    {
       href: "/categories",
       label: "Categorias",
       visible: canManageCatalog(session.activeRole),

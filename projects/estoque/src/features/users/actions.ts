@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { canManageUsers, requireSessionContext } from "@/lib/auth/auth";
-import { upsertUserForCompany } from "@/lib/store/database";
+import { registerAudit, upsertUserForCompany } from "@/lib/store/database";
 import { userSchema } from "@/lib/validation";
 
 export async function saveUserAction(formData: FormData) {
@@ -31,6 +31,22 @@ export async function saveUserAction(formData: FormData) {
 
   try {
     await upsertUserForCompany(session.activeCompany.id, parsed.data);
+
+    await registerAudit({
+      companyId: session.activeCompany.id,
+      userId: session.user.id,
+      userName: session.user.name,
+      userEmail: session.user.email,
+      userRole: session.activeRole,
+      action: isEditing ? "UPDATE" : "CREATE",
+      entity: "USER",
+      entityId: parsed.data.id || "new",
+      entityName: parsed.data.name,
+      description: isEditing
+        ? `Editou o usuario "${parsed.data.name}" (${parsed.data.email})`
+        : `Criou o usuario "${parsed.data.name}" (${parsed.data.email})`,
+      details: `Perfil: ${parsed.data.role} | Status: ${parsed.data.status}`,
+    });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Nao foi possivel salvar o usuario.";
     redirect(`${basePath}?error=${encodeURIComponent(message)}`);

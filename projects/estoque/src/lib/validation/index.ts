@@ -199,6 +199,12 @@ export const productSchema = z.object({
     .nullish()
     .transform((value) => value || undefined),
   status: z.enum(["ACTIVE", "INACTIVE"]),
+  trackBatch: z
+    .union([z.literal("on"), z.boolean(), z.null(), z.undefined()])
+    .transform((value) => value === true || value === "on"),
+  trackSerial: z
+    .union([z.literal("on"), z.boolean(), z.null(), z.undefined()])
+    .transform((value) => value === true || value === "on"),
 });
 
 export const inventoryMovementSchema = z

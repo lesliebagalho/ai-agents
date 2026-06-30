@@ -1,12 +1,14 @@
 import Link from "next/link";
-import { canManageCatalog, canManageUsers, canRegisterMovements, requireSessionContext } from "@/lib/auth/auth";
+import { requireSessionContext } from "@/lib/auth/auth";
 import {
   getInventorySummary,
+  getCurrentStockReport,
+  getStagnantProducts,
   listCategoriesByCompany,
   listInventoryMovementsByCompany,
   listProductsWithBalance,
 } from "@/lib/store/database";
-import MovementChart from "./_components/MovementChart";
+import MovementChartWithSelector from "./_components/MovementChartWithSelector";
 import ProductThumb from "@/components/ProductThumb";
 
 function formatBRL(value: number) {
@@ -29,16 +31,15 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
     getInventorySummary(session.activeCompany.id),
   ]);
 
+  const [stockReport, stagnantProducts] = await Promise.all([
+    getCurrentStockReport(session.activeCompany.id),
+    getStagnantProducts(session.activeCompany.id, 60),
+  ]);
+
   const activeProducts = products.filter((product) => product.status === "ACTIVE");
   const lowStockProducts = products.filter(
     (product) => typeof product.minimumStock === "number" && product.currentQuantity <= product.minimumStock,
   );
-
-  // Valor total do estoque
-  const totalStockValue = products.reduce((acc, product) => {
-    const price = product.costPrice ?? 0;
-    return acc + price * product.currentQuantity;
-  }, 0);
 
   // Produtos sem movimentacao nos ultimos 30 dias
   const thirtyDaysAgo = new Date();
@@ -64,23 +65,81 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
     return new Date(lastDate) < thirtyDaysAgo;
   });
 
-  // Dados para o grafico (ultimos 7 dias)
-  const last7Days: { date: string; entradas: number; saidas: number }[] = [];
+  // Produtos zerados
+  const zeroStockProducts = products.filter((p) => p.currentQuantity === 0);
+
+  // Media de valor em especie (R$) por produto
+  const totalStockValue = products.reduce((acc, p) => {
+    const price = p.costPrice ?? 0;
+    return acc + price * p.currentQuantity;
+  }, 0);
+  const avgStockValue = activeProducts.length > 0
+    ? formatBRL(totalStockValue / activeProducts.length)
+    : formatBRL(0);
+
+  // SLA: % de produtos com estoque adequado (dentro do min-max)
+  const productsWithMinMax = activeProducts.filter(
+    (p) => typeof p.minimumStock === "number" && typeof p.maximumStock === "number",
+  );
+  const productsWithinSla = productsWithMinMax.filter(
+    (p) => p.currentQuantity >= (p.minimumStock ?? 0) && p.currentQuantity <= (p.maximumStock ?? Infinity),
+  );
+  const slaPct = productsWithMinMax.length > 0
+    ? Math.round((productsWithinSla.length / productsWithMinMax.length) * 100)
+    : 0;
+
+  // Dados para o grafico (ultimos 7 dias) - convertidos para o formato do seletor
+  const chartData7d: { label: string; entradas: number; saidas: number }[] = [];
   for (let i = 6; i >= 0; i--) {
     const d = new Date();
     d.setDate(d.getDate() - i);
     const dateStr = d.toISOString().slice(0, 10);
-    const dayLabel = d.toLocaleString("pt-BR", { weekday: "short", day: "2-digit" });
+    const label = d.toLocaleString("pt-BR", { weekday: "short", day: "2-digit" });
 
     const dayMovements = movements.filter((m) => m.createdAt.slice(0, 10) === dateStr);
-    last7Days.push({
-      date: dayLabel,
+    chartData7d.push({
+      label,
       entradas: dayMovements.filter((m) => m.type === "ENTRY").reduce((a, m) => a + m.quantity, 0),
       saidas: dayMovements.filter((m) => m.type === "EXIT").reduce((a, m) => a + m.quantity, 0),
     });
   }
 
-  const hasChartData = last7Days.some((d) => d.entradas > 0 || d.saidas > 0);
+  const hasChartData = chartData7d.some((d) => d.entradas > 0 || d.saidas > 0);
+
+  // Dados para 28 dias
+  const last28Days: { label: string; entradas: number; saidas: number }[] = [];
+  for (let i = 27; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const dateStr = d.toISOString().slice(0, 10);
+    const label = d.toLocaleString("pt-BR", { weekday: "short", day: "2-digit" });
+
+    const dayMovements = movements.filter((m) => m.createdAt.slice(0, 10) === dateStr);
+    last28Days.push({
+      label,
+      entradas: dayMovements.filter((m) => m.type === "ENTRY").reduce((a, m) => a + m.quantity, 0),
+      saidas: dayMovements.filter((m) => m.type === "EXIT").reduce((a, m) => a + m.quantity, 0),
+    });
+  }
+
+  // Dados por mes (ultimos 12 meses)
+  const monthsData: { label: string; entradas: number; saidas: number }[] = [];
+  for (let i = 11; i >= 0; i--) {
+    const d = new Date();
+    d.setMonth(d.getMonth() - i);
+    const yearMonth = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+    const label = d.toLocaleString("pt-BR", { month: "short", year: "numeric" });
+
+    const monthMovements = movements.filter((m) => m.createdAt.slice(0, 7) === yearMonth);
+    monthsData.push({
+      label,
+      entradas: monthMovements.filter((m) => m.type === "ENTRY").reduce((a, m) => a + m.quantity, 0),
+      saidas: monthMovements.filter((m) => m.type === "EXIT").reduce((a, m) => a + m.quantity, 0),
+    });
+  }
+
+  // Dados para 6 meses
+  const chartData6m = monthsData.slice(-6);
 
   // Ultimas entradas e saidas
   const lastEntries = movements.filter((m) => m.type === "ENTRY").slice(0, 5);
@@ -144,64 +203,103 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
             <strong className="kpi-value">{summary.movementsToday}</strong>
           </div>
         </div>
+
+        {/* Entradas hoje */}
+        <div className="kpi-card">
+          <div className="kpi-icon" style={{ background: "#ecfdf5", color: "#047857" }}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+              <line x1="12" y1="2" x2="12" y2="22" />
+            </svg>
+          </div>
+          <div className="kpi-body">
+            <span className="kpi-label">Entradas hoje</span>
+            <strong className="kpi-value" style={{ color: "#047857" }}>
+              {movements.filter((m) => m.createdAt.slice(0, 10) === new Date().toISOString().slice(0, 10) && m.type === "ENTRY").length}
+            </strong>
+          </div>
+        </div>
+
+        {/* Saidas hoje */}
+        <div className="kpi-card">
+          <div className="kpi-icon" style={{ background: "#fef2f2", color: "#b91c1c" }}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+              <line x1="2" y1="2" x2="22" y2="22" />
+            </svg>
+          </div>
+          <div className="kpi-body">
+            <span className="kpi-label">Saidas hoje</span>
+            <strong className="kpi-value" style={{ color: "#b91c1c" }}>
+              {movements.filter((m) => m.createdAt.slice(0, 10) === new Date().toISOString().slice(0, 10) && ["EXIT", "SALE", "LOSS", "BREAKAGE", "INTERNAL_CONSUMPTION", "NEGATIVE_ADJUSTMENT"].includes(m.type)).length}
+            </strong>
+          </div>
+        </div>
+
+        {/* Produtos zerados */}
+        <div className="kpi-card">
+          <div className="kpi-icon" style={{ background: "#fef3c7", color: "#92400e" }}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="15" y1="9" x2="9" y2="15" />
+              <line x1="9" y1="9" x2="15" y2="15" />
+            </svg>
+          </div>
+          <div className="kpi-body">
+            <span className="kpi-label">Produtos zerados</span>
+            <strong className="kpi-value" style={{ color: "#92400e" }}>
+              {zeroStockProducts.length}
+            </strong>
+          </div>
+        </div>
+
+        {/* Media de valor em especie */}
+        <div className="kpi-card">
+          <div className="kpi-icon" style={{ background: "#eef2ff", color: "#4338ca" }}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="12" y1="1" x2="12" y2="23" />
+              <path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
+            </svg>
+          </div>
+          <div className="kpi-body">
+            <span className="kpi-label">Valor medio por produto</span>
+            <strong className="kpi-value" style={{ color: "#4338ca", fontSize: 22 }}>
+              {avgStockValue}
+            </strong>
+          </div>
+        </div>
+
+        {/* SLA - nivel de servico */}
+        <div className="kpi-card">
+          <div className="kpi-icon" style={{ background: slaPct >= 80 ? "#ecfdf5" : slaPct >= 50 ? "#fef3c7" : "#fef2f2", color: slaPct >= 80 ? "#047857" : slaPct >= 50 ? "#92400e" : "#b91c1c" }}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+            </svg>
+          </div>
+          <div className="kpi-body">
+            <span className="kpi-label">SLA Estoque</span>
+            <strong className="kpi-value" style={{ color: slaPct >= 80 ? "#047857" : slaPct >= 50 ? "#92400e" : "#b91c1c" }}>
+              {slaPct}%
+            </strong>
+            <span className="muted" style={{ fontSize: 11 }}>
+              {productsWithinSla.length}/{productsWithMinMax.length} produtos
+            </span>
+          </div>
+        </div>
       </div>
 
-      {/* GRAFICO + ACOES RAPIDAS */}
-      <div className="dashboard-grid two">
-        <section className="surface-card dashboard-section">
-          <div className="section-header">
-            <h3>Movimentacao (7 dias)</h3>
-            {!hasChartData && <span className="muted">Sem dados recentes</span>}
-          </div>
-          {hasChartData ? (
-            <MovementChart data={last7Days} />
-          ) : (
-            <div className="empty-state" style={{ minHeight: 160, display: "grid", placeItems: "center" }}>
-              Nenhuma movimentacao nos ultimos 7 dias.
-            </div>
-          )}
-        </section>
-
-        <section className="surface-card dashboard-section">
-          <div className="section-header">
-            <h3>Acoes rapidas</h3>
-          </div>
-          <div className="quick-actions-grid">
-            {canManageCatalog(session.activeRole) ? (
-              <>
-                <Link href="/products/new" className="quick-action">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
-                  </svg>
-                  Novo produto
-                </Link>
-                <Link href="/categories/new" className="quick-action">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
-                  </svg>
-                  Nova categoria
-                </Link>
-              </>
-            ) : null}
-            {canRegisterMovements(session.activeRole) ? (
-              <Link href="/inventory/new" className="quick-action">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
-                </svg>
-                Nova movimentacao
-              </Link>
-            ) : null}
-            {canManageUsers(session.activeRole) ? (
-              <Link href="/users/new" className="quick-action">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" /><circle cx="12" cy="7" r="4" />
-                </svg>
-                Novo usuario
-              </Link>
-            ) : null}
-          </div>
-        </section>
-      </div>
+      {/* GRAFICO MOVIMENTACAO */}
+      <section className="surface-card dashboard-section">
+        <div className="section-header">
+          <h3>Movimentacao</h3>
+        </div>
+        <MovementChartWithSelector
+          data7d={chartData7d}
+          data28d={last28Days}
+          data6m={chartData6m}
+          monthsData={monthsData}
+        />
+      </section>
 
       {/* ESTOQUE BAIXO + SEM MOVIMENTACAO */}
       <div className="dashboard-grid two">
@@ -355,6 +453,133 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
           )}
         </section>
       </div>
+
+      {/* TOP PRODUTOS + PRODUTOS SEM GIRO */}
+      <div className="dashboard-grid two">
+        <section className="surface-card dashboard-section">
+          <div className="section-header">
+            <h3>Top produtos (maior valor em estoque)</h3>
+            <Link href="/reports?tab=current-stock" className="link-button" style={{ fontSize: 13 }}>
+              Ver relatorio
+            </Link>
+          </div>
+          {stockReport.length === 0 ? (
+            <div className="empty-state">Nenhum produto em estoque.</div>
+          ) : (
+            <div className="table-wrap">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Produto</th>
+                    <th>Qtd</th>
+                    <th>Valor total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {stockReport.slice(0, 6).map((item) => (
+                    <tr key={item.product.id}>
+                      <td>
+                        <Link href={`/products/${item.product.id}`} className="table-link">
+                          {item.product.name}
+                        </Link>
+                      </td>
+                      <td>{item.currentQuantity}</td>
+                      <td style={{ fontWeight: 700 }}>{formatBRL(item.totalValue)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
+
+        <section className="surface-card dashboard-section">
+          <div className="section-header">
+            <h3>Produtos sem giro (60+ dias)</h3>
+            <Link href="/reports?tab=stagnant" className="link-button" style={{ fontSize: 13 }}>
+              Ver relatorio
+            </Link>
+          </div>
+          {stagnantProducts.length === 0 ? (
+            <div className="empty-state">Nenhum produto parado.</div>
+          ) : (
+            <div className="table-wrap">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Produto</th>
+                    <th>Saldo</th>
+                    <th>Dias parado</th>
+                    <th>Valor</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {stagnantProducts.slice(0, 6).map((item) => (
+                    <tr key={item.product.id}>
+                      <td>
+                        <Link href={`/products/${item.product.id}`} className="table-link">
+                          {item.product.name}
+                        </Link>
+                      </td>
+                      <td>{item.currentQuantity}</td>
+                      <td style={{ color: item.daysSinceLastMove > 180 ? "var(--danger, #e53e3e)" : "inherit", fontWeight: 600 }}>
+                        {item.daysSinceLastMove}d
+                      </td>
+                      <td>{formatBRL((item.product.costPrice ?? 0) * item.currentQuantity)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
+      </div>
+
+      {/* ULTIMAS MOVIMENTACOES (geral) */}
+      <section className="surface-card dashboard-section">
+        <div className="section-header">
+          <h3>Ultimas movimentacoes</h3>
+          <Link href="/inventory" className="link-button" style={{ fontSize: 13 }}>
+            Ver todas
+          </Link>
+        </div>
+        {movements.length === 0 ? (
+          <div className="empty-state">Nenhuma movimentacao registrada.</div>
+        ) : (
+          <div className="table-wrap">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Data</th>
+                  <th>Tipo</th>
+                  <th>Produto</th>
+                  <th>Qtd</th>
+                  <th>Usuario</th>
+                </tr>
+              </thead>
+              <tbody>
+                {movements.slice(0, 8).map((m) => (
+                  <tr key={m.id}>
+                    <td className="muted">{new Date(m.createdAt).toLocaleString("pt-BR")}</td>
+                    <td>
+                      <span className={`status-badge ${m.type === "ENTRY" ? "entry" : "exit"}`}>
+                        {m.type}
+                      </span>
+                    </td>
+                    <td>
+                      <Link href={`/products/${m.productId}`} className="table-link">
+                        {m.product.name}
+                      </Link>
+                    </td>
+                    <td style={{ fontWeight: 600 }}>{m.quantity}</td>
+                    <td className="muted">{m.user.name}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
     </div>
   );
 }

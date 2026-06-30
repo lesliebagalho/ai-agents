@@ -3,6 +3,7 @@
 import { useState, useCallback } from "react";
 import { saveProductAction } from "@/features/products/actions";
 import ImagePreview from "@/components/ImagePreview";
+import BarcodeScanner from "@/components/BarcodeScanner";
 
 type Category = {
   id: string;
@@ -45,6 +46,9 @@ export default function NewProductForm({ categories, brands, locations }: { cate
   const [categoryId, setCategoryId] = useState("");
   const [sku, setSku] = useState("");
   const [imageUrl, setImageUrl] = useState("");
+  const [barcode, setBarcode] = useState("");
+  const [trackBatch, setTrackBatch] = useState(false);
+  const [trackSerial, setTrackSerial] = useState(false);
 
   const selectedCategory = categories.find((c) => c.id === categoryId);
 
@@ -97,8 +101,12 @@ export default function NewProductForm({ categories, brands, locations }: { cate
 
       <div className="field-row two">
         <div className="field">
-          <label htmlFor="barcode">Codigo de barras</label>
-          <input id="barcode" name="barcode" placeholder="Ex: 7891234567890" />
+          <BarcodeScanner
+            onScan={(val) => setBarcode(val)}
+            placeholder="Ex: 7891234567890"
+            label="Codigo de barras / QR Code"
+          />
+          <input type="hidden" name="barcode" value={barcode} />
         </div>
         <div className="field">
           <label htmlFor="brandId">Marca</label>
@@ -108,6 +116,40 @@ export default function NewProductForm({ categories, brands, locations }: { cate
               <option key={brand.id} value={brand.id}>{brand.name}</option>
             ))}
           </select>
+        </div>
+      </div>
+
+      <h3 style={{ margin: "16px 0 0", fontSize: 15, fontWeight: 700 }}>Rastreabilidade</h3>
+      <div className="field-row two">
+        <div className="field">
+          <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
+            <input
+              type="checkbox"
+              name="trackBatch"
+              checked={trackBatch}
+              onChange={(e) => setTrackBatch(e.target.checked)}
+              style={{ width: 18, height: 18 }}
+            />
+            Controlar por lote
+          </label>
+          <p className="muted" style={{ fontSize: 11, marginTop: 2 }}>
+            Permite rastrear lotes, datas de fabricacao e vencimento por lote.
+          </p>
+        </div>
+        <div className="field">
+          <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
+            <input
+              type="checkbox"
+              name="trackSerial"
+              checked={trackSerial}
+              onChange={(e) => setTrackSerial(e.target.checked)}
+              style={{ width: 18, height: 18 }}
+            />
+            Controlar por numero de serie
+          </label>
+          <p className="muted" style={{ fontSize: 11, marginTop: 2 }}>
+            Cada unidade recebe um numero de serie unico para rastreabilidade total.
+          </p>
         </div>
       </div>
 

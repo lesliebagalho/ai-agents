@@ -112,6 +112,34 @@ export type Product = {
   expiryDate?: string;
   lastMovementAt?: string;
   status: ProductStatus;
+  trackBatch: boolean;
+  trackSerial: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type ProductBatch = {
+  id: string;
+  companyId: string;
+  productId: string;
+  batchCode: string;
+  quantity: number;
+  expiryDate?: string;
+  manufacturingDate?: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type ProductSerial = {
+  id: string;
+  companyId: string;
+  productId: string;
+  batchId?: string;
+  serialNumber: string;
+  status: "IN_STOCK" | "SOLD" | "RETURNED" | "LOST";
+  movementId?: string;
+  notes?: string;
   createdAt: string;
   updatedAt: string;
 };
@@ -144,6 +172,47 @@ export type InventoryMovementWithRelations = InventoryMovement & {
   user: User;
 };
 
+export type AuditAction =
+  | "CREATE"
+  | "UPDATE"
+  | "DELETE"
+  | "MOVEMENT"
+  | "LOGIN"
+  | "EXPORT"
+  | "IMPORT"
+  | "INVENTORY_START"
+  | "INVENTORY_CLOSE"
+  | "INVENTORY_COUNT";
+
+export type AuditEntity =
+  | "PRODUCT"
+  | "CATEGORY"
+  | "BRAND"
+  | "LOCATION"
+  | "SUPPLIER"
+  | "USER"
+  | "MOVEMENT"
+  | "INVENTORY"
+  | "EXIT"
+  | "COMPANY";
+
+export type AuditLog = {
+  id: string;
+  companyId: string;
+  userId: string;
+  userName: string;
+  userEmail: string;
+  userRole: UserRole;
+  action: AuditAction;
+  entity: AuditEntity;
+  entityId: string;
+  entityName: string;
+  description: string;
+  details?: string;
+  ipAddress?: string;
+  createdAt: string;
+};
+
 export type UserWithMembership = User & {
   membership: UserCompany;
 };
@@ -159,6 +228,9 @@ export type DemoDatabase = {
   inventoryCounts: InventoryCount[];
   inventoryCountItems: InventoryCountItem[];
   products: Product[];
+  productBatches: ProductBatch[];
+  productSerials: ProductSerial[];
   inventoryBalances: InventoryBalance[];
   inventoryMovements: InventoryMovement[];
+  auditLogs: AuditLog[];
 };

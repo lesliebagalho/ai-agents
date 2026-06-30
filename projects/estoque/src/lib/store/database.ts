@@ -3,6 +3,9 @@ import path from "node:path";
 import { cache } from "react";
 import { demoSeed } from "@/lib/store/seed";
 import type {
+  AuditEntity,
+  AuditLog,
+  AuditAction,
   Brand,
   Category,
   Company,
@@ -15,8 +18,11 @@ import type {
   Location,
   MovementType,
   Product,
+  ProductBatch,
+  ProductSerial,
   Supplier,
   User,
+  UserRole,
   UserWithMembership,
 } from "@/types/domain";
 
@@ -45,8 +51,11 @@ function normalizeDatabase(raw: Partial<DemoDatabase>): DemoDatabase {
     inventoryCounts: raw.inventoryCounts ?? demoSeed.inventoryCounts,
     inventoryCountItems: raw.inventoryCountItems ?? demoSeed.inventoryCountItems,
     products: raw.products ?? demoSeed.products,
+    productBatches: raw.productBatches ?? [],
+    productSerials: raw.productSerials ?? [],
     inventoryBalances: raw.inventoryBalances ?? demoSeed.inventoryBalances,
     inventoryMovements: raw.inventoryMovements ?? demoSeed.inventoryMovements,
+    auditLogs: raw.auditLogs ?? [],
   };
 }
 
@@ -827,6 +836,109 @@ export async function getFinancialSummary(companyId: string) {
 
 // -------- End Reports --------
 
+// -------- Audit --------
+
+type AuditInput = {
+  companyId: string;
+  userId: string;
+  userName: string;
+  userEmail: string;
+  userRole: string;
+  action: string;
+  entity: string;
+  entityId: string;
+  entityName: string;
+  description: string;
+  details?: string;
+  ipAddress?: string;
+};
+
+export async function registerAudit(input: AuditInput): Promise<string> {
+  const db = await readDatabase();
+  const id = crypto.randomUUID();
+
+  const log: AuditLog = {
+    id,
+    companyId: input.companyId,
+    userId: input.userId,
+    userName: input.userName,
+    userEmail: input.userEmail,
+    userRole: input.userRole as UserRole,
+    action: input.action as AuditAction,
+    entity: input.entity as AuditEntity,
+    entityId: input.entityId,
+    entityName: input.entityName,
+    description: input.description,
+    details: input.details || undefined,
+    ipAddress: input.ipAddress || undefined,
+    createdAt: new Date().toISOString(),
+  };
+
+  db.auditLogs.unshift(log);
+  await writeDatabase(db);
+  return id;
+}
+
+export async function listAuditLogs(
+  companyId: string,
+  filters: {
+    entity?: string;
+    action?: string;
+    userId?: string;
+    days?: number;
+    limit?: number;
+  } = {},
+): Promise<AuditLog[]> {
+  const db = await readDatabase();
+  const now = new Date();
+  const daysAgo = filters.days
+    ? new Date(now.getTime() - filters.days * 24 * 60 * 60 * 1000)
+    : null;
+
+  let logs = db.auditLogs.filter((log) => {
+    if (log.companyId !== companyId) return false;
+    if (filters.entity && log.entity !== filters.entity) return false;
+    if (filters.action && log.action !== filters.action) return false;
+    if (filters.userId && log.userId !== filters.userId) return false;
+    if (daysAgo && new Date(log.createdAt) < daysAgo) return false;
+    return true;
+  });
+
+  logs.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+  if (filters.limit && filters.limit > 0) {
+    logs = logs.slice(0, filters.limit);
+  }
+
+  return logs;
+}
+
+export async function getAuditSummary(companyId: string) {
+  const db = await readDatabase();
+  const logs = db.auditLogs.filter((l) => l.companyId === companyId);
+
+  const byAction: Record<string, number> = {};
+  const byEntity: Record<string, number> = {};
+  const byUser: Record<string, { count: number; name: string }> = {};
+  const byDate: Record<string, number> = {};
+
+  for (const log of logs) {
+    byAction[log.action] = (byAction[log.action] || 0) + 1;
+    byEntity[log.entity] = (byEntity[log.entity] || 0) + 1;
+    if (!byUser[log.userId]) {
+      byUser[log.userId] = { count: 0, name: log.userName };
+    }
+    byUser[log.userId].count++;
+
+    const day = log.createdAt.slice(0, 10);
+    byDate[day] = (byDate[day] || 0) + 1;
+  }
+
+  return { total: logs.length, byAction, byEntity, byUser, byDate };
+}
+
+// -------- End Audit --------
+
 export async function upsertCategory(companyId: string, input: CategoryInput) {
   const db = await readDatabase();
   const normalizedName = input.name.trim();
@@ -1014,6 +1126,8 @@ type ProductInput = {
   imageUrl?: string;
   expiryDate?: string;
   status: Product["status"];
+  trackBatch?: boolean;
+  trackSerial?: boolean;
 };
 
 export async function upsertProduct(companyId: string, input: ProductInput) {
@@ -1065,6 +1179,8 @@ export async function upsertProduct(companyId: string, input: ProductInput) {
             imageUrl: input.imageUrl?.trim() || undefined,
             expiryDate: input.expiryDate || undefined,
             status: input.status,
+            trackBatch: input.trackBatch ?? false,
+            trackSerial: input.trackSerial ?? false,
             updatedAt: new Date().toISOString(),
           }
         : product,
@@ -1092,6 +1208,8 @@ export async function upsertProduct(companyId: string, input: ProductInput) {
       imageUrl: input.imageUrl?.trim() || undefined,
       expiryDate: input.expiryDate || undefined,
       status: input.status,
+      trackBatch: input.trackBatch ?? false,
+      trackSerial: input.trackSerial ?? false,
       createdAt: now,
       updatedAt: now,
     });
@@ -1265,4 +1383,153 @@ export async function getInventorySummary(companyId: string) {
     totalTrackedItems: Object.keys(balances).length,
     totalQuantity,
   };
+}
+
+// -------- Product Batches --------
+
+export async function listBatchesByProduct(companyId: string, productId: string) {
+  const db = await readDatabase();
+  return db.productBatches
+    .filter((b) => b.companyId === companyId && b.productId === productId)
+    .sort((a, b) => a.batchCode.localeCompare(b.batchCode));
+}
+
+export async function getBatchById(companyId: string, batchId: string) {
+  const db = await readDatabase();
+  return db.productBatches.find((b) => b.id === batchId && b.companyId === companyId) ?? null;
+}
+
+type BatchInput = {
+  id?: string;
+  productId: string;
+  batchCode: string;
+  quantity: number;
+  expiryDate?: string;
+  manufacturingDate?: string;
+  notes?: string;
+};
+
+export async function upsertProductBatch(companyId: string, input: BatchInput) {
+  const db = await readDatabase();
+
+  if (input.id) {
+    const idx = db.productBatches.findIndex((b) => b.id === input.id && b.companyId === companyId);
+    if (idx === -1) throw new Error("Lote nao encontrado.");
+    db.productBatches[idx] = {
+      ...db.productBatches[idx],
+      batchCode: input.batchCode.trim(),
+      quantity: input.quantity,
+      expiryDate: input.expiryDate || undefined,
+      manufacturingDate: input.manufacturingDate || undefined,
+      notes: input.notes?.trim() || undefined,
+      updatedAt: new Date().toISOString(),
+    };
+  } else {
+    const now = new Date().toISOString();
+    db.productBatches.push({
+      id: crypto.randomUUID(),
+      companyId,
+      productId: input.productId,
+      batchCode: input.batchCode.trim(),
+      quantity: input.quantity,
+      expiryDate: input.expiryDate || undefined,
+      manufacturingDate: input.manufacturingDate || undefined,
+      notes: input.notes?.trim() || undefined,
+      createdAt: now,
+      updatedAt: now,
+    });
+  }
+
+  await writeDatabase(db);
+}
+
+export async function addBatchQuantity(companyId: string, batchId: string, quantity: number) {
+  const db = await readDatabase();
+  const batch = db.productBatches.find((b) => b.id === batchId && b.companyId === companyId);
+  if (!batch) throw new Error("Lote nao encontrado.");
+  batch.quantity += quantity;
+  batch.updatedAt = new Date().toISOString();
+  await writeDatabase(db);
+  return batch;
+}
+
+export async function removeBatchQuantity(companyId: string, batchId: string, quantity: number) {
+  const db = await readDatabase();
+  const batch = db.productBatches.find((b) => b.id === batchId && b.companyId === companyId);
+  if (!batch) throw new Error("Lote nao encontrado.");
+  if (batch.quantity < quantity) throw new Error("Quantidade insuficiente no lote.");
+  batch.quantity -= quantity;
+  batch.updatedAt = new Date().toISOString();
+  await writeDatabase(db);
+  return batch;
+}
+
+// -------- Product Serials --------
+
+export async function listSerialsByProduct(companyId: string, productId: string) {
+  const db = await readDatabase();
+  return db.productSerials
+    .filter((s) => s.companyId === companyId && s.productId === productId)
+    .sort((a, b) => a.serialNumber.localeCompare(b.serialNumber));
+}
+
+export async function getSerialById(companyId: string, serialId: string) {
+  const db = await readDatabase();
+  return db.productSerials.find((s) => s.id === serialId && s.companyId === companyId) ?? null;
+}
+
+type SerialInput = {
+  id?: string;
+  productId: string;
+  serialNumber: string;
+  batchId?: string;
+  notes?: string;
+};
+
+export async function registerProductSerial(companyId: string, input: SerialInput) {
+  const db = await readDatabase();
+
+  const duplicate = db.productSerials.find(
+    (s) => s.companyId === companyId && s.serialNumber.toLowerCase() === input.serialNumber.trim().toLowerCase(),
+  );
+  if (duplicate) throw new Error("Numero de serie ja registrado.");
+
+  const now = new Date().toISOString();
+  db.productSerials.push({
+    id: crypto.randomUUID(),
+    companyId,
+    productId: input.productId,
+    serialNumber: input.serialNumber.trim(),
+    batchId: input.batchId || undefined,
+    status: "IN_STOCK",
+    movementId: undefined,
+    notes: input.notes?.trim() || undefined,
+    createdAt: now,
+    updatedAt: now,
+  });
+
+  await writeDatabase(db);
+}
+
+export async function updateSerialStatus(
+  companyId: string,
+  serialId: string,
+  status: "IN_STOCK" | "SOLD" | "RETURNED" | "LOST",
+  movementId?: string,
+) {
+  const db = await readDatabase();
+  const serial = db.productSerials.find((s) => s.id === serialId && s.companyId === companyId);
+  if (!serial) throw new Error("Serial nao encontrado.");
+  serial.status = status;
+  serial.movementId = movementId || undefined;
+  serial.updatedAt = new Date().toISOString();
+  await writeDatabase(db);
+  return serial;
+}
+
+export async function getAvailableSerials(companyId: string, productId: string) {
+  const db = await readDatabase();
+  return db.productSerials.filter(
+    (s) => s.companyId === companyId && s.productId === productId && s.status === "IN_STOCK",
+  );
 }

@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { canManageCatalog, canRegisterMovements, requireSessionContext } from "@/lib/auth/auth";
-import { closeInventoryCount, deleteLocation, listBrandsByCompany, listProductsByCompany, registerInventoryMovement, startInventoryCount, updateInventoryCountItem, upsertBrand, upsertCategory, upsertLocation, upsertProduct, upsertSupplier } from "@/lib/store/database";
+import { closeInventoryCount, deleteLocation, listBrandsByCompany, listProductsByCompany, registerAudit, registerInventoryMovement, startInventoryCount, updateInventoryCountItem, upsertBrand, upsertCategory, upsertLocation, upsertProduct, upsertSupplier } from "@/lib/store/database";
 import { brandSchema, categorySchema, inventoryMovementSchema, locationSchema, productSchema, supplierSchema } from "@/lib/validation";
 
 export async function saveCategoryAction(formData: FormData) {
@@ -73,7 +73,23 @@ export async function saveProductAction(formData: FormData) {
   }
 
   try {
+    const productId = formData.get("id");
+    const isEditing = productId && String(productId).trim().length > 0;
     await upsertProduct(session.activeCompany.id, parsed.data);
+
+    await registerAudit({
+      companyId: session.activeCompany.id,
+      userId: session.user.id,
+      userName: session.user.name,
+      userEmail: session.user.email,
+      userRole: session.activeRole,
+      action: isEditing ? "UPDATE" : "CREATE",
+      entity: "PRODUCT",
+      entityId: parsed.data.id || "new",
+      entityName: parsed.data.name,
+      description: isEditing ? `Editou o produto "${parsed.data.name}"` : `Criou o produto "${parsed.data.name}"`,
+      details: JSON.stringify(parsed.data),
+    });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Nao foi possivel salvar o produto.";
     redirect(`/products?error=${encodeURIComponent(message)}`);
@@ -104,7 +120,21 @@ export async function saveInventoryMovementAction(formData: FormData) {
   }
 
   try {
-    await registerInventoryMovement(session.activeCompany.id, session.user.id, parsed.data);
+    const result = await registerInventoryMovement(session.activeCompany.id, session.user.id, parsed.data);
+
+    await registerAudit({
+      companyId: session.activeCompany.id,
+      userId: session.user.id,
+      userName: session.user.name,
+      userEmail: session.user.email,
+      userRole: session.activeRole,
+      action: "MOVEMENT",
+      entity: "MOVEMENT",
+      entityId: result.movement.id,
+      entityName: `${parsed.data.type}: ${result.product.name}`,
+      description: `${parsed.data.type === "ENTRY" ? "Entrada" : "Saida"} de ${parsed.data.quantity} ${result.product.unit}(s) de "${result.product.name}"`,
+      details: `Anterior: ${result.movement.previousQuantity} → Resultante: ${result.movement.resultingQuantity}`,
+    });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Nao foi possivel registrar a movimentacao.";
     redirect(`/inventory/new?error=${encodeURIComponent(message)}`);
@@ -405,7 +435,21 @@ export async function saveExitMovementAction(formData: FormData) {
   }
 
   try {
-    await registerInventoryMovement(session.activeCompany.id, session.user.id, parsed.data);
+    const result = await registerInventoryMovement(session.activeCompany.id, session.user.id, parsed.data);
+
+    await registerAudit({
+      companyId: session.activeCompany.id,
+      userId: session.user.id,
+      userName: session.user.name,
+      userEmail: session.user.email,
+      userRole: session.activeRole,
+      action: "MOVEMENT",
+      entity: "EXIT",
+      entityId: result.movement.id,
+      entityName: `Saida: ${result.product.name}`,
+      description: `${parsed.data.type}: ${parsed.data.quantity} ${result.product.unit}(s) de "${result.product.name}"`,
+      details: `Anterior: ${result.movement.previousQuantity} → Resultante: ${result.movement.resultingQuantity}`,
+    });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Nao foi possivel registrar a saida.";
     redirect(`/exits/new?error=${encodeURIComponent(message)}`);

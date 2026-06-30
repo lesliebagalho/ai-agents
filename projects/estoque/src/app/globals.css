@@ -217,8 +217,6 @@ textarea {
 
 .app-shell {
   min-height: 100vh;
-  display: grid;
-  grid-template-columns: 240px minmax(0, 1fr);
 }
 
 .sidebar {
@@ -228,7 +226,13 @@ textarea {
   display: grid;
   align-content: start;
   gap: 20px;
-  width: 100%;
+  width: 240px;
+  height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  overflow-y: auto;
+  z-index: 50;
 }
 
 .brand {
@@ -445,6 +449,7 @@ textarea {
 
 .app-main {
   min-width: 0;
+  margin-left: 240px;
 }
 
 .topbar {
@@ -625,7 +630,14 @@ textarea {
   }
 
   .sidebar {
+    position: static;
+    width: 100%;
+    height: auto;
     padding-bottom: 12px;
+  }
+
+  .app-main {
+    margin-left: 0;
   }
 }
 
@@ -911,4 +923,19 @@ textarea {
 .badge-viewer {
   background: #e9d8fd;
   color: #6b46c1;
+}
+
+/* Barcode Scanner */
+.barcode-scanner {
+  margin-bottom: 8px;
+}
+
+.barcode-scanner input:focus {
+  outline: 2px solid var(--primary);
+  outline-offset: -1px;
+}
+
+.barcode-scanner button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }

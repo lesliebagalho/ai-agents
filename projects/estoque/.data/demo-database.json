@@ -51,16 +51,16 @@
       "companyId": "company-acme",
       "name": "Insumos",
       "description": "Materiais de consumo recorrente.",
-      "createdAt": "2026-06-29T20:14:47.470Z",
-      "updatedAt": "2026-06-29T20:14:47.470Z"
+      "createdAt": "2026-06-29T21:57:10.307Z",
+      "updatedAt": "2026-06-29T21:57:10.307Z"
     },
     {
       "id": "category-beta-1",
       "companyId": "company-beta",
       "name": "Revenda",
       "description": "Produtos preparados para revenda.",
-      "createdAt": "2026-06-29T20:14:47.470Z",
-      "updatedAt": "2026-06-29T20:14:47.470Z"
+      "createdAt": "2026-06-29T21:57:10.307Z",
+      "updatedAt": "2026-06-29T21:57:10.307Z"
     }
   ],
   "brands": [
@@ -68,22 +68,22 @@
       "id": "brand-acme-1",
       "companyId": "company-acme",
       "name": "Nestle",
-      "createdAt": "2026-06-29T20:14:47.470Z",
-      "updatedAt": "2026-06-29T20:14:47.470Z"
+      "createdAt": "2026-06-29T21:57:10.307Z",
+      "updatedAt": "2026-06-29T21:57:10.307Z"
     },
     {
       "id": "brand-acme-2",
       "companyId": "company-acme",
       "name": "Coca-Cola",
-      "createdAt": "2026-06-29T20:14:47.470Z",
-      "updatedAt": "2026-06-29T20:14:47.470Z"
+      "createdAt": "2026-06-29T21:57:10.307Z",
+      "updatedAt": "2026-06-29T21:57:10.307Z"
     },
     {
       "id": "brand-beta-1",
       "companyId": "company-beta",
       "name": "3M",
-      "createdAt": "2026-06-29T20:14:47.470Z",
-      "updatedAt": "2026-06-29T20:14:47.470Z"
+      "createdAt": "2026-06-29T21:57:10.307Z",
+      "updatedAt": "2026-06-29T21:57:10.307Z"
     }
   ],
   "locations": [
@@ -93,8 +93,8 @@
       "name": "Galpao A",
       "level": 0,
       "sortOrder": 1,
-      "createdAt": "2026-06-29T20:14:47.470Z",
-      "updatedAt": "2026-06-29T20:14:47.470Z"
+      "createdAt": "2026-06-29T21:57:10.307Z",
+      "updatedAt": "2026-06-29T21:57:10.307Z"
     },
     {
       "id": "loc-acme-2",
@@ -103,8 +103,8 @@
       "name": "Rua 01",
       "level": 1,
       "sortOrder": 1,
-      "createdAt": "2026-06-29T20:14:47.470Z",
-      "updatedAt": "2026-06-29T20:14:47.470Z"
+      "createdAt": "2026-06-29T21:57:10.307Z",
+      "updatedAt": "2026-06-29T21:57:10.307Z"
     },
     {
       "id": "loc-acme-3",
@@ -113,8 +113,8 @@
       "name": "Prateleira 02",
       "level": 2,
       "sortOrder": 1,
-      "createdAt": "2026-06-29T20:14:47.470Z",
-      "updatedAt": "2026-06-29T20:14:47.470Z"
+      "createdAt": "2026-06-29T21:57:10.307Z",
+      "updatedAt": "2026-06-29T21:57:10.307Z"
     },
     {
       "id": "loc-acme-4",
@@ -123,8 +123,8 @@
       "name": "Nivel 03",
       "level": 3,
       "sortOrder": 1,
-      "createdAt": "2026-06-29T20:14:47.470Z",
-      "updatedAt": "2026-06-29T20:14:47.470Z"
+      "createdAt": "2026-06-29T21:57:10.307Z",
+      "updatedAt": "2026-06-29T21:57:10.307Z"
     },
     {
       "id": "loc-beta-1",
@@ -132,8 +132,8 @@
       "name": "Deposito Central",
       "level": 0,
       "sortOrder": 1,
-      "createdAt": "2026-06-29T20:14:47.470Z",
-      "updatedAt": "2026-06-29T20:14:47.470Z"
+      "createdAt": "2026-06-29T21:57:10.307Z",
+      "updatedAt": "2026-06-29T21:57:10.307Z"
     },
     {
       "id": "loc-beta-2",
@@ -142,8 +142,8 @@
       "name": "Corredor B",
       "level": 1,
       "sortOrder": 1,
-      "createdAt": "2026-06-29T20:14:47.470Z",
-      "updatedAt": "2026-06-29T20:14:47.470Z"
+      "createdAt": "2026-06-29T21:57:10.307Z",
+      "updatedAt": "2026-06-29T21:57:10.307Z"
     }
   ],
   "suppliers": [
@@ -157,8 +157,8 @@
       "email": "carlos@distpapeis.com.br",
       "address": "Rua dos Papéis, 100, SP",
       "status": "ACTIVE",
-      "createdAt": "2026-06-29T20:14:47.470Z",
-      "updatedAt": "2026-06-29T20:14:47.470Z"
+      "createdAt": "2026-06-29T21:57:10.307Z",
+      "updatedAt": "2026-06-29T21:57:10.307Z"
     },
     {
       "id": "supplier-acme-2",
@@ -170,8 +170,8 @@
       "email": "marina@embpremium.com",
       "address": "Av das Embalagens, 200, SP",
       "status": "ACTIVE",
-      "createdAt": "2026-06-29T20:14:47.470Z",
-      "updatedAt": "2026-06-29T20:14:47.470Z"
+      "createdAt": "2026-06-29T21:57:10.307Z",
+      "updatedAt": "2026-06-29T21:57:10.307Z"
     },
     {
       "id": "supplier-beta-1",
@@ -183,12 +183,55 @@
       "email": "roberto@caixasecia.com",
       "address": "Rua das Caixas, 50, RJ",
       "status": "ACTIVE",
-      "createdAt": "2026-06-29T20:14:47.470Z",
-      "updatedAt": "2026-06-29T20:14:47.470Z"
+      "createdAt": "2026-06-29T21:57:10.307Z",
+      "updatedAt": "2026-06-29T21:57:10.307Z"
     }
   ],
-  "inventoryCounts": [],
-  "inventoryCountItems": [],
+  "inventoryCounts": [
+    {
+      "id": "34f97834-8729-48bc-b334-8f63b7455631",
+      "companyId": "company-acme",
+      "name": "teste",
+      "status": "CLOSED",
+      "createdAt": "2026-06-30T00:20:56.565Z",
+      "createdByUserId": "user-ana",
+      "closedAt": "2026-06-30T00:21:09.041Z"
+    }
+  ],
+  "inventoryCountItems": [
+    {
+      "id": "4fdf7a2f-18e8-4899-87da-504de4b45115",
+      "inventoryCountId": "34f97834-8729-48bc-b334-8f63b7455631",
+      "productId": "product-acme-1",
+      "expectedQuantity": 12,
+      "countedQuantity": 12,
+      "difference": 0
+    },
+    {
+      "id": "81030a23-c41d-45a7-af0f-e1320c08a1d9",
+      "inventoryCountId": "34f97834-8729-48bc-b334-8f63b7455631",
+      "productId": "product-acme-2",
+      "expectedQuantity": 2,
+      "countedQuantity": 2,
+      "difference": 0
+    },
+    {
+      "id": "46d5c832-15eb-49d9-9715-3e106b9fa8a8",
+      "inventoryCountId": "34f97834-8729-48bc-b334-8f63b7455631",
+      "productId": "product-acme-3",
+      "expectedQuantity": 0,
+      "countedQuantity": 0,
+      "difference": 0
+    },
+    {
+      "id": "4e5fbe89-93fe-40cc-b623-138f7d0edc31",
+      "inventoryCountId": "34f97834-8729-48bc-b334-8f63b7455631",
+      "productId": "product-acme-4",
+      "expectedQuantity": 10,
+      "countedQuantity": 10,
+      "difference": 0
+    }
+  ],
   "products": [
     {
       "id": "product-acme-1",
@@ -200,8 +243,8 @@
       "unit": "BOX",
       "minimumStock": 5,
       "status": "ACTIVE",
-      "createdAt": "2026-06-29T20:14:47.470Z",
-      "updatedAt": "2026-06-29T20:14:47.470Z"
+      "createdAt": "2026-06-29T21:57:10.307Z",
+      "updatedAt": "2026-06-29T21:57:10.307Z"
     },
     {
       "id": "product-acme-2",
@@ -212,10 +255,10 @@
       "costPrice": 189.9,
       "unit": "UNIT",
       "minimumStock": 3,
-      "expiryDate": "2026-07-24T20:14:47.470Z",
+      "expiryDate": "2026-07-24T21:57:10.307Z",
       "status": "ACTIVE",
-      "createdAt": "2026-06-29T20:14:47.470Z",
-      "updatedAt": "2026-06-29T20:14:47.470Z"
+      "createdAt": "2026-06-29T21:57:10.307Z",
+      "updatedAt": "2026-06-29T21:57:10.307Z"
     },
     {
       "id": "product-acme-3",
@@ -227,8 +270,8 @@
       "unit": "UNIT",
       "minimumStock": 50,
       "status": "ACTIVE",
-      "createdAt": "2026-06-29T20:14:47.470Z",
-      "updatedAt": "2026-06-29T20:14:47.470Z"
+      "createdAt": "2026-06-29T21:57:10.307Z",
+      "updatedAt": "2026-06-29T21:57:10.307Z"
     },
     {
       "id": "product-acme-4",
@@ -240,8 +283,8 @@
       "unit": "UNIT",
       "minimumStock": 30,
       "status": "ACTIVE",
-      "createdAt": "2025-12-31T20:14:47.470Z",
-      "updatedAt": "2025-12-31T20:14:47.470Z"
+      "createdAt": "2025-12-31T21:57:10.307Z",
+      "updatedAt": "2025-12-31T21:57:10.307Z"
     },
     {
       "id": "product-beta-1",
@@ -253,45 +296,47 @@
       "unit": "UNIT",
       "minimumStock": 10,
       "status": "ACTIVE",
-      "createdAt": "2026-06-29T20:14:47.470Z",
-      "updatedAt": "2026-06-29T20:14:47.470Z"
+      "createdAt": "2026-06-29T21:57:10.307Z",
+      "updatedAt": "2026-06-29T21:57:10.307Z"
     }
   ],
+  "productBatches": [],
+  "productSerials": [],
   "inventoryBalances": [
     {
       "id": "balance-acme-1",
       "companyId": "company-acme",
       "productId": "product-acme-1",
       "currentQuantity": 12,
-      "updatedAt": "2026-06-29T20:14:47.470Z"
+      "updatedAt": "2026-06-29T21:57:10.307Z"
     },
     {
       "id": "balance-acme-2",
       "companyId": "company-acme",
       "productId": "product-acme-2",
       "currentQuantity": 2,
-      "updatedAt": "2026-06-29T20:14:47.470Z"
+      "updatedAt": "2026-06-29T21:57:10.307Z"
     },
     {
       "id": "balance-acme-3",
       "companyId": "company-acme",
       "productId": "product-acme-3",
       "currentQuantity": 0,
-      "updatedAt": "2026-06-29T20:14:47.470Z"
+      "updatedAt": "2026-06-29T21:57:10.307Z"
     },
     {
       "id": "balance-acme-4",
       "companyId": "company-acme",
       "productId": "product-acme-4",
       "currentQuantity": 10,
-      "updatedAt": "2025-12-31T20:14:47.470Z"
+      "updatedAt": "2025-12-31T21:57:10.307Z"
     },
     {
       "id": "balance-beta-1",
       "companyId": "company-beta",
       "productId": "product-beta-1",
       "currentQuantity": 24,
-      "updatedAt": "2026-06-29T20:14:47.470Z"
+      "updatedAt": "2026-06-29T21:57:10.307Z"
     }
   ],
   "inventoryMovements": [
@@ -305,7 +350,7 @@
       "previousQuantity": 0,
       "resultingQuantity": 12,
       "note": "Carga inicial para validacao.",
-      "createdAt": "2026-06-29T20:14:47.470Z"
+      "createdAt": "2026-06-29T21:57:10.307Z"
     },
     {
       "id": "move-beta-1",
@@ -317,7 +362,67 @@
       "previousQuantity": 0,
       "resultingQuantity": 24,
       "note": "Carga inicial para validacao.",
-      "createdAt": "2026-06-29T20:14:47.470Z"
+      "createdAt": "2026-06-29T21:57:10.307Z"
+    }
+  ],
+  "auditLogs": [
+    {
+      "id": "audit-1",
+      "companyId": "company-acme",
+      "userId": "user-ana",
+      "userName": "Ana Gestora",
+      "userEmail": "ana@estoque.local",
+      "userRole": "ADMIN",
+      "action": "CREATE",
+      "entity": "PRODUCT",
+      "entityId": "product-acme-1",
+      "entityName": "Papel A4",
+      "description": "Criou o produto \"Papel A4\"",
+      "createdAt": "2026-06-29T21:57:10.307Z"
+    },
+    {
+      "id": "audit-2",
+      "companyId": "company-acme",
+      "userId": "user-ana",
+      "userName": "Ana Gestora",
+      "userEmail": "ana@estoque.local",
+      "userRole": "ADMIN",
+      "action": "MOVEMENT",
+      "entity": "MOVEMENT",
+      "entityId": "move-acme-1",
+      "entityName": "ENTRY: Papel A4",
+      "description": "Entrada de 12 BOX(s) de \"Papel A4\"",
+      "details": "Anterior: 0 → Resultante: 12",
+      "createdAt": "2026-06-29T21:57:10.307Z"
+    },
+    {
+      "id": "audit-3",
+      "companyId": "company-beta",
+      "userId": "user-ana",
+      "userName": "Ana Gestora",
+      "userEmail": "ana@estoque.local",
+      "userRole": "ADMIN",
+      "action": "CREATE",
+      "entity": "PRODUCT",
+      "entityId": "product-beta-1",
+      "entityName": "Caixa Organizadora",
+      "description": "Criou o produto \"Caixa Organizadora\"",
+      "createdAt": "2026-06-29T21:57:10.307Z"
+    },
+    {
+      "id": "audit-4",
+      "companyId": "company-beta",
+      "userId": "user-ana",
+      "userName": "Ana Gestora",
+      "userEmail": "ana@estoque.local",
+      "userRole": "ADMIN",
+      "action": "MOVEMENT",
+      "entity": "MOVEMENT",
+      "entityId": "move-beta-1",
+      "entityName": "ENTRY: Caixa Organizadora",
+      "description": "Entrada de 24 UNIT(s) de \"Caixa Organizadora\"",
+      "details": "Anterior: 0 → Resultante: 24",
+      "createdAt": "2026-06-29T21:57:10.307Z"
     }
   ]
 }
